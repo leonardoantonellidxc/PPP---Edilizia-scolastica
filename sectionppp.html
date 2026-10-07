@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Piattaforma Paternariato Pubblico Privato Edilizia Scolastica</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/lenis@1.3.26/dist/lenis.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-italia@2.14.0/dist/css/bootstrap-italia.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Filtro SVG "gesso" (v2, dopo feedback di Leo "non mi piace, deve sembrare gesso da lavagna" sulla v1
+     troppo punteggiata/a pallini): ora il tratto resta continuo e pieno, con bordi strappati/organici
+     (feTurbulence+feDisplacementMap, ondeggiamento su scala piu' grande = "morso" irregolare come gesso che si
+     sbriciola sui bordi) e una grana interna porosa ma leggera (secondo feTurbulence+feColorMatrix+feComposite,
+     soglia alta cosi' non punzona buchi netti ma solo variazioni di densita' del colore). filterUnits=
+     "userSpaceOnUse" con una region ampia e fissa (non percentuale): i tratti generati da elbowSegment() a volte
+     degenerano in un singolo segmento dritto verticale/orizzontale (bbox con un lato a ~0px) - con la region
+     percentuale di default (objectBoundingBox) quel lato a 0 azzera l'intera area del filtro e la linea sparisce
+     del tutto. Verificato con Playwright su linea dritta verticale/orizzontale e su elbow: sempre visibile. -->
+<svg style="position:absolute;width:0;height:0" aria-hidden="true">
+  <defs>
+    <filter id="chalk-fx" filterUnits="userSpaceOnUse" x="-200" y="-200" width="3000" height="8000">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05 0.08" numOctaves="2" seed="9" result="edgeNoise"/>
+      <feDisplacementMap in="SourceGraphic" in2="edgeNoise" scale="7" xChannelSelector="R" yChannelSelector="G" result="rough"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.4" numOctaves="2" seed="6" result="grain"/>
+      <feColorMatrix in="grain" type="matrix"
+        values="0 0 0 0 0
+                0 0 0 0 0
+                0 0 0 0 0
+                0 0 0 0.6 0.45" result="grainAlpha"/>
+      <feComposite in="rough" in2="grainAlpha" operator="in"/>
+    </filter>
+  </defs>
+</svg>
+
+<!-- Sprite icone Bootstrap Italia incorporato: le icone richiamate con <use href="https://.../sprites.svg#..."> da CDN o da un path esterno non si vedono in NESSUN browser (restrizione di sicurezza sugli SVG esterni via <use>, indipendente dal fatto che il file sia raggiungibile). Con questo blocco le icone funzionano sempre, aprendo il file da qualsiasi posizione. -->
+<svg style="display:none" aria-hidden="true">
+  <symbol id="icon-it-pa" viewBox="0 0 24 24"><path d="M3 21h18v1H3v-1zm0-1h18v-1H3v1zM22 9H2l10-7 10 7zM5.2 8h13.6L12 3.2 5.2 8zM6 18v-8H5v8h1zm4 0v-8H9v8h1zm5 0v-8h-1v8h1zm4 0v-8h-1v8h1z"/></symbol>
+  <symbol id="icon-it-burger" viewBox="0 0 24 24"><path d="M22 5v1H2V5h20zM2 12.5h20v-1H2v1zM2 19h20v-1H2v1z"/></symbol>
+  <symbol id="icon-it-close-big" viewBox="0 0 24 24"><path d="m12.7 12 6.7 6.6-.8.8-6.6-6.7-6.6 6.7-.8-.8 6.7-6.6-6.7-6.6.8-.8 6.6 6.7 6.6-6.7.8.8-6.7 6.6z"/></symbol>
+  <symbol id="icon-it-arrow-right" viewBox="0 0 24 24"><path d="m13.9 5.4-.7.7 5.3 5.4H3v1h15.5l-5.3 5.4.7.7 6.6-6.6-6.6-6.6z"/></symbol>
+  <symbol id="icon-it-arrow-left" viewBox="0 0 24 24"><path d="M21 11.5H5.5l5.3-5.4-.7-.7L3.6 12l6.5 6.6.7-.7-5.3-5.4H21v-1z"/></symbol>
+  <symbol id="icon-it-bookmark" viewBox="0 0 24 24"><path d="m18 22.7-6-6-6 6V2h12v20.7zm-6-7.4 5 5V3H7v17.3l5-5z"/></symbol>
+  <symbol id="icon-it-files" viewBox="0 0 24 24"><path d="M15.7 2H7.5C6.7 2 6 2.7 6 3.5V4h-.5C4.7 4 4 4.7 4 5.5v15c0 .8.7 1.5 1.5 1.5h11c.8 0 1.5-.7 1.5-1.5V20h.5c.8 0 1.5-.7 1.5-1.5V6.3L15.7 2zm.3 1.7L18.3 6h-1.8c-.3 0-.5-.2-.5-.5V3.7zm1 16.8c0 .3-.2.5-.5.5h-11c-.3 0-.5-.2-.5-.5v-15c0-.3.2-.5.5-.5H6v13.5c0 .8.7 1.5 1.5 1.5H17v.5zm1.5-1.5h-11c-.3 0-.5-.2-.5-.5v-15c0-.3.2-.5.5-.5H15v2.5c0 .8.7 1.5 1.5 1.5H19v11.5c0 .3-.2.5-.5.5zM9 9h8v1H9V9zm0 2h8v1H9v-1zm0 2h4v1H9v-1z"/></symbol>
+  <symbol id="icon-it-check" viewBox="0 0 24 24"><path d="M9.6 16.9 4 11.4l.8-.7 4.8 4.8 8.5-8.4.7.7-9.2 9.1z"/></symbol>
+  <symbol id="icon-it-piattaforme" viewBox="0 0 24 24"><path d="M9 1.1 15.9 5 9 8.9 2.1 5 9 1.1M9 0 0 5l9 5 9-5-9-5zM18 11.7l-9 5-9-5 1-.5 8 4.4 8-4.5z" transform="translate(3 3)"/><path d="m18 8.5-9 5-9-5L1 8l8 4.4 8-4.5z" transform="translate(3 3)"/></symbol>
+  <symbol id="icon-it-user" viewBox="0 0 24 24"><path d="M12 13c2.2 0 4-1.8 4-4V6c0-2.2-1.8-4-4-4S8 3.8 8 6v3c0 2.2 1.8 4 4 4zM9 6c0-1.7 1.3-3 3-3s3 1.3 3 3v3c0 1.7-1.3 3-3 3s-3-1.3-3-3V6zm11 16h-1c0-3.9-3.1-7-7-7s-7 3.1-7 7H4c0-4.4 3.6-8 8-8s8 3.6 8 8z"/></symbol>
+  <symbol id="icon-it-external-link" viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></symbol>
+  <symbol id="icon-it-comment" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h2v5.4l1.7-1.7 3.7-3.7H19c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm1 12c.1.5-.3.9-.8 1H12l-4 4v-4H5c-.5.1-.9-.3-1-.8V5c-.1-.5.3-.9.8-1H19c.5-.1.9.3 1 .8V15zM9 10c.1.5-.3.9-.8 1H8c-.5.1-.9-.3-1-.8V10c-.1-.5.3-.9.8-1H8c.5-.1.9.3 1 .8v.2zm4 0c0 .6-.4 1-1 1s-1-.4-1-1 .4-1 1-1 1 .4 1 1zm4 0c0 .6-.4 1-1 1s-1-.4-1-1 .4-1 1-1 1 .4 1 1z"/></symbol>
+  <!-- Icone "outline" (stroke, non fill) per la sezione .why-final - stile diverso apposta, coerente
+       con la bozza mockup di Leo (icone a linea sottile bianca, non piene come icon-it-files/-pa/
+       -comment usate in "Come funziona"). Non esistono gia' nello sprite
+       Bootstrap Italia originale, quindi sono path standard (stile Lucide/Feather, molto diffuso)
+       ridisegnati a mano qui dentro, stessa tecnica gia' usata per le altre icone incorporate. -->
+  <symbol id="icon-it-files-outline" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2v6h6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 13h6M9 17h6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="icon-it-pa-outline" viewBox="0 0 24 24"><path d="M3 10l9-6 9 6M5 10v11M19 10v11M9 10v11M15 10v11M3 21h18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="icon-it-book-outline" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="icon-it-download" viewBox="0 0 24 24"><path d="M12 14.2 7.7 9.9l.7-.7 3.1 3.1V3h1v9.2l3.1-3 .7.7-4.3 4.3zm7-2.2v7.5c0 .3-.2.5-.5.5h-13c-.3 0-.5-.2-.5-.5V12H4v7.5c0 .8.7 1.5 1.5 1.5h13c.8 0 1.5-.7 1.5-1.5V12h-1z"/></symbol>
+  <symbol id="icon-it-expand" viewBox="0 0 24 24"><path d="M11.6 15.4 6 9.8l.7-.8 4.9 4.9L16.5 9l.7.8z"/></symbol>
+  <symbol id="icon-it-code-circle" viewBox="0 0 24 24"><path d="m19 12-2.9 2.9-.7-.8 2.1-2.1-2.1-2.1.7-.8L19 12zM7.9 9.1 5 12l2.9 2.9.7-.8L6.5 12l2.1-2.1-.7-.8zM22 12c0 5.5-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2s10 4.5 10 10zm-1 0c0-5-4-9-9-9s-9 4-9 9 4 9 9 9 9-4 9-9zM9.6 16.5l1 .3 3.7-9.3-.9-.3-3.8 9.3z"/></symbol>
+  <symbol id="icon-it-designers-italia" viewBox="0 0 24 24"><path d="M8.7 20.2v-13h3.6v13.1l-3.6-.1zM23 10.1h-3.3v6.5c0 .2.1.4.3.6s.4.2.8.2h2.1l.2 2.8c-1.2.3-2.1.4-2.8.4-1.6 0-2.7-.3-3.3-1.1-.6-.7-.9-2-.9-3.9v-12h3.6v3.6H23v2.9zm-19.8 1c-.6 0-1.2-.2-1.6-.6-.4-.4-.6-.9-.6-1.5s.2-1.1.6-1.5c.4-.5.9-.7 1.6-.7s1.1.2 1.5.6c.4.5.6 1 .6 1.6s-.2 1.1-.6 1.5-.9.6-1.5.6z"/></symbol>
+  <symbol id="icon-it-twitter" viewBox="0 0 24 24"><path d="M13.927 10.491 19.511 4h-1.323l-4.849 5.636L9.467 4H5l5.856 8.523L5 19.33h1.323l5.12-5.952 4.09 5.952H20l-6.073-8.839Zm-1.812 2.107-.594-.849-4.72-6.753h2.032l3.81 5.45.593.849 4.953 7.084h-2.033l-4.041-5.78v-.001Z"/></symbol>
+  <symbol id="icon-it-medium" viewBox="0 0 24 24"><path d="M13.281 12.625c0 3.107-2.525 5.625-5.64 5.625C4.524 18.25 2 15.732 2 12.625S4.525 7 7.64 7c3.116 0 5.641 2.518 5.641 5.625Zm6.188 0c0 2.924-1.263 5.295-2.82 5.295-1.558 0-2.82-2.371-2.82-5.295s1.262-5.295 2.82-5.295c1.557 0 2.82 2.371 2.82 5.295Zm2.531 0c0 2.62-.444 4.744-.992 4.744s-.992-2.125-.992-4.744c0-2.62.444-4.744.992-4.744S22 10.005 22 12.625Z"/></symbol>
+  <symbol id="icon-it-behance" viewBox="0 0 24 24"><path d="M7.8 5.8c.5 0 1.1 0 1.6.2.4.1.9.3 1.2.5.4.1.7.5.9.8.2.5.3 1 .3 1.4 0 .5-.1 1.1-.4 1.5-.3.4-.8.8-1.3 1 .7.2 1.3.6 1.7 1.1.4.6.6 1.3.6 2 0 .5-.1 1.1-.3 1.6-.2.4-.6.8-1 1.1-.4.3-.9.5-1.4.6-.6.4-1.2.4-1.7.4H2V5.8h5.8zm-.3 5c.4 0 .8-.1 1.2-.4.3-.3.5-.7.4-1.1 0-.3 0-.5-.1-.8-.1-.1-.2-.3-.4-.4-.2-.1-.4-.2-.6-.2-.2 0-.5-.1-.7-.1H4.7v2.9l2.8.1zm.1 5.2c.3 0 .5 0 .8-.1l.6-.3c.2-.1.3-.3.4-.5.1-.3.2-.5.2-.8 0-.5-.2-1-.5-1.3-.4-.3-.9-.4-1.4-.4h-3V16h2.9zm8.6-.1c.4.4 1 .6 1.6.5.4 0 .9-.1 1.3-.4.3-.2.5-.5.6-.8h2.1c-.2.9-.8 1.7-1.6 2.3-.8.5-1.7.7-2.6.7-.6 0-1.3-.1-1.9-.3-1.1-.4-2-1.3-2.3-2.4-.2-.6-.3-1.2-.3-1.9 0-.6.1-1.3.3-1.9.2-.6.5-1.1.9-1.5.4-.4.9-.8 1.4-1 .7-.2 1.3-.3 1.9-.3.7 0 1.4.1 2 .4.5.3 1 .7 1.4 1.2.4.5.6 1.1.8 1.7.2.7.2 1.3.2 2h-6.4c0 .6.2 1.2.6 1.7zm2.8-4.7c-.4-.3-.9-.5-1.4-.5-.3 0-.7 0-1 .2-.2.1-.5.3-.6.5-.2.2-.3.4-.3.6-.1.2-.1.4-.1.6h4c-.1-.5-.3-1-.6-1.4zm-3.9-4.6h5v1.2h-5V6.6z"/></symbol>
+</svg>
+
+<a href="#main-content" class="skip-link">Salta al contenuto</a>
+
+<!-- 07/10/2026 - Leo (accessibilita', punto 6): <header> attorno a slim header e header centrale, cosi' il contenuto non
+     resta fuori da ogni landmark (axe "region"). La barra con il menu (.ppp-navbar-sticky) resta FUORI
+     dall'<header> di proposito: un elemento sticky si ferma alla fine del proprio contenitore, dentro
+     un <header> basso smetterebbe di restare agganciato. Ha comunque il suo landmark (<nav>). -->
+<header>
+<div class="it-header-slim-wrapper theme-light">
+  <div class="container-xxl">
+    <div class="row">
+      <div class="col-12">
+        <div class="it-header-slim-wrapper-content">
+          <a class="navbar-brand" href="#">Ministero dell'Istruzione e del Merito</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="it-header-center-wrapper theme-light">
+  <div class="container-xxl">
+    <div class="row">
+      <div class="col-12">
+        <div class="it-header-center-content-wrapper">
+          <div class="it-brand-wrapper">
+            <a href="#">
+              <svg class="icon" aria-hidden="true">
+                <use href="#icon-it-pa"></use>
+              </svg>
+              <div class="it-brand-text">
+                <div class="it-brand-title">Piattaforma Paternariato<br>Pubblico Privato Edilizia Scolastica</div>
+                <div class="it-brand-tagline">Guida al partenariato pubblico privato</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</header>
+
+<div class="it-header-navbar-wrapper theme-light-desk ppp-navbar-sticky">
+  <div class="container-xxl">
+    <div class="row">
+      <div class="col-12">
+        <nav class="navbar navbar-expand-lg" aria-label="Navigazione principale">
+          <button class="custom-navbar-toggler" type="button" aria-controls="pppNav" aria-label="Mostra/Nascondi la navigazione" data-bs-toggle="navbarcollapsible" data-bs-target="#pppNav">
+            <svg class="icon"><use href="#icon-it-burger"></use></svg>
+          </button>
+          <div class="navbar-collapsable" id="pppNav" tabindex="-1">
+            <div class="close-div">
+              <button class="btn close-menu" type="button">
+                <span class="visually-hidden">Nascondi la navigazione</span>
+                <svg class="icon"><use href="#icon-it-close-big"></use></svg>
+              </button>
+            </div>
+            <div class="menu-wrapper">
+              <ul class="navbar-nav">
+                <li class="nav-item active"><a class="nav-link active" href="#" aria-current="page"><span>Home</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#percorso"><span>Scegli il percorso</span></a></li>
+
+                <li class="nav-item"><a class="nav-link" href="#fonti"><span>Fonti normative</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#faq"><span>FAQ</span></a></li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main id="main-content">
+
+  <!-- ===================================================================
+       SEZIONI SVILUPPATE: hero, "Come funziona",
+       "Perche' usare questa piattaforma", wizard di riepilogo.
+       =================================================================== -->
+
+  <!-- ===== HERO ===== -->
+  <section class="ppp-hero">
+    <img src="assets/backgroud.png" alt="" class="ppp-hero-bg">
+    <div class="container-xxl ppp-hero-inner">
+      <div class="row g-0">
+        <div class="col-12 col-lg-6 py-3">
+          <p class="ppp-eyebrow text-uppercase mb-2">Guida al paternariato pubblico privato</p>
+          <h1 class="fw-bold mb-2 h2">Orientarsi tra norme, fasi e forme contrattuali del Paternariato Pubblico Privato scolastico</h1>
+          <p class="ppp-lead mb-0">Una guida passo passo pensata per pubbliche amministrazioni e operatori privati, per orientarsi tra norme, fasi e forme contrattuali del paternariato pubblico privato.</p>
+          <div class="ppp-hero-stats d-flex align-items-center mt-3 mb-3">
+            <div class="ppp-stat">
+              <span class="ppp-stat-num" data-final="3">0</span>
+              <span class="ppp-stat-label">percorsi dedicati</span>
+            </div>
+            <span class="ppp-stat-sep"></span>
+            <div class="ppp-stat">
+              <span class="ppp-stat-num" data-final="7">0</span>
+              <span class="ppp-stat-label">tappe riassuntive</span>
+            </div>
+            <span class="ppp-stat-sep"></span>
+            <div class="ppp-stat">
+              <span class="ppp-stat-num" data-final="5">0</span>
+              <span class="ppp-stat-label">aule informative</span>
+            </div>
+          </div>
+          <!-- 29/09/2026 - Leo: via l'icona "rounded-icon" (freccia dentro un cerchietto) -
+               sostituita con una semplice freccia a destra, stesso pattern gia' in uso per tutti
+               gli altri pulsanti "Avanti" del sito (es. #wizNext nel wizard di riepilogo). -->
+          <a href="#percorso" class="btn btn-primary">
+            <span>Scegli il percorso</span>
+            <svg class="icon icon-white icon-sm ms-1"><use href="#icon-it-arrow-right"></use></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+    <!-- 07/10/2026 - Leo (mobile): avatar nascosto sotto i 768px con le utility di Bootstrap Italia
+         (d-none + d-md-block) invece di una regola CSS custom. -->
+    <img src="assets/avatar-hero.png" alt="La tua guida al paternariato" class="d-none d-md-block h-75 ppp-hero-avatar">
+  </section>
+
+  <!-- ===== COME FUNZIONA ===== -->
+  <section class="cf-section">
+    <div class="container-xxl">
+      <div class="cf-head">
+        <h2>Come funziona</h2>
+        <p>Tre fasi, dalla scelta del profilo alle schede di sintesi finali. La seconda comprende le 6 tappe del percorso informativo.</p>
+      </div>
+      <div class="row align-items-center g-4">
+        <div class="col-12 col-lg-4">
+          <img src="assets/comefunziona.png" alt="" class="cf-illustration">
+        </div>
+        <div class="col-12 col-lg-8">
+          <div class="row g-4">
+            <div class="col-12 col-sm-11">
+              <article class="it-card it-card-height-full rounded border shadow-sm cf-card">
+                <span class="cf-num" aria-hidden="true">01</span>
+                <div class="it-card-body">
+                  <h3 class="it-card-title"><a href="#schede-sintesi">Consulta le schede di sintesi</a></h3>
+                  <p class="it-card-text">Al termine ritrovi in un'unica scheda i punti chiave e i riferimenti utili, pronti da consultare o condividere.</p>
+                </div>
+                <div class="it-card-footer">
+                  <a href="#schede-sintesi" class="btn btn-outline-primary">Consulta le schede</a>
+                </div>
+              </article>
+            </div>
+            <div class="col-12 col-sm-11 offset-sm-1">
+              <article class="it-card it-card-height-full rounded border shadow-sm cf-card">
+                <span class="cf-num" aria-hidden="true">02</span>
+                <div class="it-card-body">
+                  <h3 class="it-card-title"><a href="#percorso">Scegli il tuo profilo</a></h3>
+                  <p class="it-card-text">Indica se sei una pubblica amministrazione o un soggetto privato: i contenuti del percorso si adattano al profilo che scegli.</p>
+                </div>
+                <div class="it-card-footer">
+                  <a href="#percorso" class="btn btn-outline-primary">Scegli il profilo</a>
+                </div>
+              </article>
+            </div>
+            <div class="col-12 col-sm-11">
+              <article class="it-card it-card-height-full rounded border shadow-sm cf-card">
+                <span class="cf-num" aria-hidden="true">03</span>
+                <div class="it-card-body">
+                  <h3 class="it-card-title"><a href="#percorso">Entra in ogni aula</a></h3>
+                  <p class="it-card-text">Attraversa il percorso una tappa alla volta: in ogni aula trovi definizioni, riferimenti normativi, ruoli e forme contrattuali del PPP, spiegati passo dopo passo.</p>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PERCHE' USARE (mockup approvato da Leo, 06/10/2026) =====
+       Sostituisce le 3 section precedenti (.why-band con card, .why-alt separe', .why-band duplicata):
+       Leo: "e' stata approvata questa section. quindi e' da convertire in html" (mockup: blocco
+       logo ministero a sinistra + 3 colonne con icona/titolo/testo, divise da linee verticali, su
+       fondo blu con pattern puntinato). Griglia Bootstrap Italia: row + 4 col (logo col-lg-3,
+       3 colonne contenuto col-lg-3 ciascuna). Icone outline (sprite #icon-it-*-outline, in cima al
+       file), colore bianco via currentColor.
+       Stemma: serve il file COMPLETO (assets/Vector-ministeriale-completo.png, bianco su trasparente):
+       le 3 varianti attuali (Vector-ministeriale/-bg/-brand.png) sono tutte ritagli della meta'
+       sinistra, pensati come sfondo tagliato, quindi qui verrebbero mostrati a meta'. -->
+  <section class="why-final section-reveal">
+    <div class="container-xxl">
+      <div class="why-final-head">
+        <p class="why-final-eyebrow">Un servizio del Ministero dell'Istruzione e del Merito</p>
+        <h2 class="why-final-title">Perch&eacute; usare questa piattaforma</h2>
+      </div>
+      <div class="row gy-4 gy-lg-0 why-final-row">
+        <div class="col-12 col-lg-3">
+          <div class="why-final-brand">
+            <img src="assets/Vector-ministeriale-completo.png" alt="" class="why-final-emblem" aria-hidden="true">
+            <span class="why-final-flag" aria-hidden="true"><span></span><span></span><span></span></span>
+            <p class="why-final-brand-name">Ministero dell&rsquo;Istruzione<br>e del Merito</p>
+          </div>
+        </div>
+        <div class="col-12 col-md-4 col-lg-3 why-final-item">
+          <span class="why-final-icon"><svg aria-hidden="true"><use href="#icon-it-files-outline"></use></svg></span>
+          <h3 class="why-final-item-title">Fonti ufficiali e aggiornate</h3>
+          <p class="why-final-item-text">Basata sul Codice dei contratti, sulle linee guida MEF e sui riferimenti EPEC, aggiornati all'ultimo Correttivo.</p>
+        </div>
+        <div class="col-12 col-md-4 col-lg-3 why-final-item">
+          <span class="why-final-icon"><svg aria-hidden="true"><use href="#icon-it-pa-outline"></use></svg></span>
+          <h3 class="why-final-item-title">Un servizio pubblico e gratuito</h3>
+          <p class="why-final-item-text">Realizzata dalla pubblica amministrazione per enti, imprese e cittadini. Accesso libero, senza costi e senza registrazione.</p>
+        </div>
+        <div class="col-12 col-md-4 col-lg-3 why-final-item">
+          <span class="why-final-icon"><svg aria-hidden="true"><use href="#icon-it-book-outline"></use></svg></span>
+          <h3 class="why-final-item-title">Un linguaggio comprensibile</h3>
+          <p class="why-final-item-text">Norme, sigle e procedure complesse tradotte in parole semplici, anche per chi affronta il PPP per la prima volta.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== RIEPILOGO (wizard a tappe) ===== -->
+  <section class="wiz" id="riepilogo">
+    <div class="container-xxl">
+      <div class="wiz-head">
+        <h2>Le tappe del percorso</h2>
+        <p>Dalla verifica di convenienza alla chiusura del contratto: le 7 fasi che scandiscono un progetto di paternariato pubblico privato per l'edilizia scolastica.</p>
+      </div>
+      <ol class="wiz-steps" id="wizSteps"></ol>
+      <div class="wiz-body wiz-reveal-panel" id="wizPanel">
+        <div class="wiz-text">
+          <!-- 07/10/2026 - Leo: il validatore W3C segnalava "Empty heading" perche' titolo e testi
+               vengono scritti solo dal JS (render() sotto). Ora il markup parte gia' con il contenuto
+               della prima tappa (stesso testo di WIZ[0], il JS lo sostituisce uguale al caricamento),
+               cosi' il titolo non e' mai vuoto, anche senza JS. Il titolo e' un h3 (sotto l'h2 della
+               sezione "Le tappe del percorso") per non avere due h2 di fila. -->
+          <h3 class="wiz-title" id="wizTitle">Programmazione</h3>
+          <p class="wiz-lead" id="wizSummary">L'ente verifica se il PPP conviene rispetto all'appalto tradizionale.</p>
+          <p class="wiz-lead" id="wizDetail">Si analizza il patrimonio esistente, si stima il fabbisogno di investimento e si confronta il costo di un appalto tradizionale (PSC) con quello di un PPP attraverso una griglia MCA a più criteri. Solo se il confronto è favorevole si procede.</p>
+          <div class="wiz-nav">
+            <button class="btn btn-outline-primary" id="wizPrev" type="button"><svg class="icon icon-primary icon-sm me-1"><use href="#icon-it-arrow-left"></use></svg>Indietro</button>
+            <button class="btn btn-primary" id="wizNext" type="button">Avanti<svg class="icon icon-white icon-sm ms-1"><use href="#icon-it-arrow-right"></use></svg></button>
+          </div>
+          <!-- 07/10/2026 - Leo (accessibilita', punto 5): annuncio vocale del cambio tappa (testo scritto dal JS in render(), solo dopo un'azione dell'utente) -->
+          <div class="visually-hidden" id="wizStatus" role="status" aria-live="polite"></div>
+        </div>
+        <div class="wiz-guide">
+          <img src="assets/1.png" alt="La tua guida" class="wiz-mascot" id="wizMascot">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SCEGLI IL PERCORSO ===== -->
+  <section class="sp-section" id="percorso">
+    <div class="sp-brick sp-brick-left" aria-hidden="true"></div>
+    <div class="sp-brick sp-brick-right" aria-hidden="true"></div>
+    <div class="container-xxl">
+      <div class="sp-head">
+        <h2>Scegli il tuo percorso</h2>
+        <p>Percorso informativo e gratuito, pensato anche per chi si avvicina per la prima volta al PPP: non sostituisce una consulenza legale.</p>
+      </div>
+      <div class="sp-pills-illustration-wrap">
+        <img src="assets/utenze.png" alt="" class="sp-pills-illustration" id="spPillsIllustration" aria-hidden="true">
+      </div>
+    </div>
+    <div class="sp-pills-sticky">
+      <div class="container-xxl">
+        <!-- 07/10/2026 - Leo (mobile): i 3 pulsanti devono stare su UNA riga. Sotto i 576px le etichette
+             lunghe diventano "E. pubblico" / "O. privato" (utility Bootstrap d-none/d-sm-inline e
+             d-sm-none); il testo completo resta per gli screen reader nello span visually-hidden. -->
+        <div class="btn-group" id="spPills" role="group" aria-label="Scegli il profilo">
+          <button class="btn btn-primary" type="button" data-profilo="pa" aria-pressed="true"><span class="d-none d-sm-inline">Ente pubblico</span><span class="d-sm-none" aria-hidden="true">E. pubblico</span><span class="d-sm-none visually-hidden">Ente pubblico</span></button>
+          <button class="btn btn-outline-primary" type="button" data-profilo="privato" aria-pressed="false"><span class="d-none d-sm-inline">Operatore privato</span><span class="d-sm-none" aria-hidden="true">O. privato</span><span class="d-sm-none visually-hidden">Operatore privato</span></button>
+          <button class="btn btn-outline-primary" type="button" data-profilo="cittadino" aria-pressed="false">Cittadino</button>
+        </div>
+        <div class="sp-pills-connector" id="spPillsConnector" aria-hidden="true"><svg id="spPillsConnectorSvg"><path id="spPillsConnectorPath"></path></svg></div>
+      </div>
+    </div>
+    <div class="container-xxl">
+      <div class="sp-percorso" id="spPercorso">
+        <svg class="sp-path-svg" id="spPathSvg" aria-hidden="true"><g id="spPathGroup"></g></svg>
+        <!-- 07/10/2026 - Leo (accessibilita', punto 5): annuncio vocale quando cambia il profilo (le card vengono rifatte) -->
+        <div class="visually-hidden" id="spStatus" role="status" aria-live="polite"></div>
+        <div id="spCards"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="fonti-band section-reveal" id="fonti">
+    <div class="wrap">
+      <div class="fonti-head">
+        <h2>Fonti normative</h2>
+        <p>I riferimenti su cui si basa il percorso informativo e il configuratore.</p>
+      </div>
+      <div class="row g-3 g-lg-4">
+        <div class="col-12 col-md-4">
+          <article class="it-card it-card-height-full rounded shadow fn-card">
+            <div class="it-card-body">
+              <span class="fonte-tag">Normativa</span>
+              <h3 class="it-card-title">Codice dei contratti pubblici</h3>
+              <p class="it-card-text">D.Lgs. 36/2023 — disciplina generale del paternariato pubblico privato.</p>
+            </div>
+          </article>
+        </div>
+        <div class="col-12 col-md-4">
+          <article class="it-card it-card-height-full rounded shadow fn-card">
+            <div class="it-card-body">
+              <span class="fonte-tag">Linee guida</span>
+              <h3 class="it-card-title">Linee guida MEF edilizia scolastica</h3>
+              <p class="it-card-text">Criteri di valutazione economico-finanziaria per i progetti PPP nel settore scuola.</p>
+            </div>
+          </article>
+        </div>
+        <div class="col-12 col-md-4">
+          <article class="it-card it-card-height-full rounded shadow fn-card">
+            <div class="it-card-body">
+              <span class="fonte-tag">Guida</span>
+              <h3 class="it-card-title">Guida EPEC</h3>
+              <p class="it-card-text">European PPP Expertise Centre — riferimento concettuale per il configuratore.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+      <p class="fonti-links-lead">Consulta direttamente le fonti ufficiali:</p>
+      <div class="fonti-links">
+        <a href="https://www.gazzettaufficiale.it/eli/id/2023/04/13/23A02179/sg" target="_blank" rel="noopener">
+          <span>Codice dei contratti pubblici</span>
+          <svg class="icon" aria-hidden="true"><use href="#icon-it-external-link"></use></svg>
+          <span class="visually-hidden">(link esterno)</span>
+        </a>
+        <a href="https://www.rgs.mef.gov.it/VERSIONE-I/attivita_istituzionali/attivit_trasversali/ppp/contratti_standard_e_linee_guida/" target="_blank" rel="noopener">
+          <span>Linee guida MEF</span>
+          <svg class="icon" aria-hidden="true"><use href="#icon-it-external-link"></use></svg>
+          <span class="visually-hidden">(link esterno)</span>
+        </a>
+        <a href="https://www.eib.org/en/publications/20250124-epec-guide-to-public-private-partnerships" target="_blank" rel="noopener">
+          <span>Guida EPEC</span>
+          <svg class="icon" aria-hidden="true"><use href="#icon-it-external-link"></use></svg>
+          <span class="visually-hidden">(link esterno)</span>
+        </a>
+        <a href="https://www.rgs.mef.gov.it/_Documenti/VERSIONE-I/Comunicazione/Workshop-e-convegni/Partenariato-PPP/La-classificazione-delle-operazioni-in-Partenariato-Pubblico-Privato-nellambito-delle-regole-europee.pdf" target="_blank" rel="noopener">
+          <span>Classificazione Eurostat</span>
+          <svg class="icon" aria-hidden="true"><use href="#icon-it-external-link"></use></svg>
+          <span class="visually-hidden">(link esterno)</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="my-3" id="faq">
+    <div class="container-xxl">
+      <div class="row align-items-center faq-reveal" id="faqHeadBlock">
+        <div class="col-12 col-lg-7">
+          <p class="ppp-eyebrow">FAQ</p>
+          <h2 class="faq-title">Hai delle domande sul PPP scolastico?</h2>
+          <p class="faq-lead">Qui trovi risposte alle domande più frequenti sul Partenariato Pubblico Privato per la realizzazione e la gestione delle scuole.</p>
+        </div>
+        <div class="col-12 col-lg-5 text-center text-lg-end">
+          <img src="assets/faq.png" alt="" class="faq-illustration">
+        </div>
+      </div>
+
+      <div class="accordion faq-accordion faq-reveal" id="faqAccordion">
+        <div class="accordion-item">
+          <h3 class="accordion-header" id="faqHeading1">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse1" aria-expanded="false" aria-controls="faqCollapse1">
+              Che cos'è il Partenariato Pubblico-Privato (PPP) nell'edilizia scolastica?
+            </button>
+          </h3>
+          <div id="faqCollapse1" class="accordion-collapse collapse" role="region" aria-labelledby="faqHeading1">
+            <div class="accordion-body">
+              È una forma di collaborazione tra un ente pubblico e un operatore privato per progettare, costruire, finanziare e gestire un edificio scolastico. Il privato anticipa le risorse e si assume parte dei rischi dell'operazione, in cambio di un canone legato alla disponibilità e alla qualità del servizio nel tempo, non a un semplice pagamento a opera conclusa.
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <h3 class="accordion-header" id="faqHeading2">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse2" aria-expanded="false" aria-controls="faqCollapse2">
+              In cosa si differenzia il PPP da un appalto tradizionale?
+            </button>
+          </h3>
+          <div id="faqCollapse2" class="accordion-collapse collapse" role="region" aria-labelledby="faqHeading2">
+            <div class="accordion-body">
+              Nell'appalto tradizionale l'ente paga l'opera e ne resta responsabile nel tempo. Nel PPP è il privato ad anticipare le risorse e a farsi carico dei rischi di costruzione e gestione: viene remunerato con un canone che varia in base alle prestazioni effettivamente rese, non con un pagamento fisso a fine lavori.
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <h3 class="accordion-header" id="faqHeading3">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse3" aria-expanded="false" aria-controls="faqCollapse3">
+              Quanto dura in media un contratto di PPP per una scuola?
+            </button>
+          </h3>
+          <div id="faqCollapse3" class="accordion-collapse collapse" role="region" aria-labelledby="faqHeading3">
+            <div class="accordion-body">
+              Varia in base alla complessità dell'intervento, ma per l'edilizia scolastica la fase di gestione dura in genere tra 15 e 30 anni: un arco di tempo sufficiente ad ammortizzare l'investimento privato attraverso il canone.
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <h3 class="accordion-header" id="faqHeading4">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse4" aria-expanded="false" aria-controls="faqCollapse4">
+              Come si stabilisce se conviene scegliere il PPP invece dell'appalto?
+            </button>
+          </h3>
+          <div id="faqCollapse4" class="accordion-collapse collapse" role="region" aria-labelledby="faqHeading4">
+            <div class="accordion-body">
+              L'ente confronta i due scenari nel DOCFAP, il documento di fattibilità delle alternative progettuali, usando una griglia MCA a più criteri che tiene conto di costi, rischi e tempi. Solo se il confronto risulta favorevole al PPP si procede con questa strada.
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <h3 class="accordion-header" id="faqHeading5">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse5" aria-expanded="false" aria-controls="faqCollapse5">
+              Chi paga l'edificio scolastico in un'operazione di PPP?
+            </button>
+          </h3>
+          <div id="faqCollapse5" class="accordion-collapse collapse" role="region" aria-labelledby="faqHeading5">
+            <div class="accordion-body">
+              L'investimento iniziale è anticipato in gran parte dal privato, spesso con il supporto di finanziamenti bancari o di Cassa Depositi e Prestiti. L'ente pubblico lo restituisce nel tempo attraverso il canone di disponibilità, senza gravare subito sul proprio bilancio.
+            </div>
+          </div>
+        </div>
+
+        <div id="faqExtra" hidden>
+          <div class="accordion-item">
+            <h3 class="accordion-header" id="faqHeading6">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse6" aria-expanded="false" aria-controls="faqCollapse6">
+                Cosa succede se il privato non rispetta gli standard di qualità concordati?
+              </button>
+            </h3>
+            <div id="faqCollapse6" class="accordion-collapse collapse" role="region" aria-labelledby="faqHeading6">
+              <div class="accordion-body">
+                Il canone si riduce automaticamente in base a indicatori di prestazione (KPI) definiti nel contratto — temperatura, illuminazione, qualità dell'aria, disponibilità della struttura — senza bisogno di contestazioni formali. Il rischio di una gestione scadente resta quindi in capo al privato.
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <h3 class="accordion-header" id="faqHeading7">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse7" aria-expanded="false" aria-controls="faqCollapse7">
+                Chi può proporre un progetto di PPP: solo l'ente pubblico?
+              </button>
+            </h3>
+            <div id="faqCollapse7" class="accordion-collapse collapse" role="region" aria-labelledby="faqHeading7">
+              <div class="accordion-body">
+                No. Il PPP può partire da un bando pubblicato dall'ente (iniziativa pubblica) oppure da una proposta spontanea di un operatore privato (iniziativa privata), che l'ente valuta e porta comunque a una gara aperta.
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <h3 class="accordion-header" id="faqHeading8">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse8" aria-expanded="false" aria-controls="faqCollapse8">
+                Cosa succede alla scuola al termine del contratto?
+              </button>
+            </h3>
+            <div id="faqCollapse8" class="accordion-collapse collapse" role="region" aria-labelledby="faqHeading8">
+              <div class="accordion-body">
+                L'edificio torna alla piena disponibilità pubblica, nello stato di conservazione previsto dal contratto. La scuola continua la sua funzione come istituto statale, senza interruzioni per studenti e personale.
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <h3 class="accordion-header" id="faqHeading9">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse9" aria-expanded="false" aria-controls="faqCollapse9">
+                Quando diventa efficace il contratto dopo l'aggiudicazione?
+              </button>
+            </h3>
+            <div id="faqCollapse9" class="accordion-collapse collapse" role="region" aria-labelledby="faqHeading9">
+              <div class="accordion-body">
+                Dopo l'aggiudicazione c'è un periodo di sospensione (standstill) di 35 giorni per eventuali ricorsi. Trascorso questo termine si firma il contratto, che diventa efficace solo dopo la trasmissione dei dati dell'operazione al portale della Ragioneria Generale dello Stato.
+              </div>
+            </div>
+          </div>
+          <div class="accordion-item">
+            <h3 class="accordion-header" id="faqHeading10">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse10" aria-expanded="false" aria-controls="faqCollapse10">
+                Dove trovo i riferimenti normativi completi?
+              </button>
+            </h3>
+            <div id="faqCollapse10" class="accordion-collapse collapse" role="region" aria-labelledby="faqHeading10">
+              <div class="accordion-body">
+                Nella sezione <a href="#fonti">Fonti normative</a> di questa piattaforma trovi il Codice dei contratti pubblici (D.Lgs. 36/2023), le linee guida MEF per l'edilizia scolastica e la Guida EPEC come riferimento concettuale.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-more-wrap" id="faqMoreWrap">
+        <button class="btn btn-outline-primary" id="faqMoreBtn" type="button" aria-expanded="false" aria-controls="faqExtra">
+          Vedi altre domande
+          <svg class="icon icon-sm ms-1" aria-hidden="true"><use href="#icon-it-expand"></use></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+
+</main>
+
+<!-- Footer ufficiale Bootstrap Italia (23/09/2026 - Leo, markup fornito direttamente da lui),
+     al posto della cta-band + footer custom di prima. Icone: sostituito xlink:href verso un path
+     esterno /bootstrap-italia/dist/svg/sprites.svg (non funziona in nessun browser, stessa
+     restrizione di sicurezza sugli SVG esterni via <use> gia' annotata sopra lo sprite incorporato)
+     con gli id locali icon-it-code-circle/designers-italia/twitter/medium/behance, aggiunti allo
+     sprite incorporato con i path reali del pacchetto bootstrap-italia. Colonna centrale ("Lorem
+     Ipsum") tolta su richiesta di Leo: non ci sono ancora i dati per quella sezione. Testo/contatti
+     rimasti quelli placeholder forniti da Leo (Comune di Lorem Ipsum, P.IVA 000000000, ecc.): non
+     essendo dati reali, da sostituire quando disponibili. -->
+<footer class="it-footer">
+  <div class="it-footer-main">
+    <div class="container">
+      <section>
+        <div class="row clearfix">
+          <div class="col-sm-12">
+            <div class="it-brand-wrapper">
+              <a href="#" data-focus-mouse="false">
+                <svg class="icon"><use href="#icon-it-code-circle"></use></svg>
+                <div class="it-brand-text">
+                  <h2>Lorem Ipsum</h2>
+                  <!-- 07/10/2026 - Leo (accessibilita', punto 7): su mobile la tag line era display:none, quindi gli h4 "Contatti"/"Seguici su" saltavano
+                       da h2 a h4. Ora resta nell'albero di accessibilita' e si nasconde solo visivamente sotto i 768px
+                       (classe ppp-tagline-sr-mobile nel CSS). -->
+                  <h3 class="ppp-tagline-sr-mobile">Inserire qui la tag line</h3>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="py-4 border-white border-top">
+        <div class="row">
+          <div class="col-lg-4 col-md-4 pb-2">
+            <h4>Contatti</h4>
+            <p>
+              <strong>Comune di Lorem Ipsum</strong><br>
+              Via Roma 0 - 00000 Lorem Ipsum Codice fiscale / P. IVA: 000000000
+            </p>
+            <div class="link-list-wrapper">
+              <ul class="footer-list link-list clearfix">
+                <li><a class="list-item" href="#">Posta Elettronica Certificata</a></li>
+                <li>
+                  <a class="list-item" href="#">URP - Ufficio Relazioni con il Pubblico</a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-4 pb-2">
+            <div class="pb-2">
+              <h4>Seguici su</h4>
+              <ul class="list-inline text-left social">
+                <li class="list-inline-item">
+                  <a class="p-2 text-white" href="#"><svg class="icon icon-sm icon-white align-top"><use href="#icon-it-designers-italia"></use></svg><span class="visually-hidden">Designers Italia (link esterno)</span></a>
+                </li>
+                <li class="list-inline-item">
+                  <a class="p-2 text-white" href="#"><svg class="icon icon-sm icon-white align-top"><use href="#icon-it-twitter"></use></svg><span class="visually-hidden">X (link esterno)</span></a>
+                </li>
+                <li class="list-inline-item">
+                  <a class="p-2 text-white" href="#"><svg class="icon icon-sm icon-white align-top"><use href="#icon-it-medium"></use></svg><span class="visually-hidden">Medium (link esterno)</span></a>
+                </li>
+                <li class="list-inline-item">
+                  <a class="p-2 text-white" href="#"><svg class="icon icon-sm icon-white align-top"><use href="#icon-it-behance"></use></svg><span class="visually-hidden">Behance (link esterno)</span></a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+  <div class="it-footer-small-prints clearfix">
+    <div class="container">
+      <ul class="it-footer-small-prints-list list-inline mb-0 d-flex flex-column flex-md-row">
+        <li class="list-inline-item"><a href="#">Media policy</a></li>
+        <li class="list-inline-item"><a href="#">Note legali</a></li>
+        <li class="list-inline-item"><a href="#">Privacy policy</a></li>
+        <li class="list-inline-item"><a href="#">Mappa del sito</a></li>
+        <li class="list-inline-item"><a href="https://form.agid.gov.it/view/xyz">Dichiarazione di accessibilità <span class="visually-hidden">(link esterno su sito AgID)</span></a></li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/lenis@1.3.26/dist/lenis.min.js"></script>
+<script>
+/* 07/10/2026 - Leo (accessibilita', punto 9): lo scroll "morbido" di Lenis si attiva solo se l'utente NON ha chiesto
+   di ridurre le animazioni (prefers-reduced-motion). Senza Lenis, window.lenis resta undefined e il
+   resto della pagina usa gia' lo scroll nativo (vedi scrollToPercorsoTop e scrollToStep). */
+if(!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)){
+  const lenis = new Lenis();
+  function raf(t){ lenis.raf(t); requestAnimationFrame(raf); }
+  requestAnimationFrame(raf);
+  window.lenis = lenis;
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-italia@2.14.0/dist/js/bootstrap-italia.bundle.min.js"></script>
+
+<script>
+(function(){
+  var WIZ=[{"label": "Programmazione", "title": "Programmazione", "summary": "L'ente verifica se il PPP conviene rispetto all'appalto tradizionale.", "detail": "Si analizza il patrimonio esistente, si stima il fabbisogno di investimento e si confronta il costo di un appalto tradizionale (PSC) con quello di un PPP attraverso una griglia MCA a più criteri. Solo se il confronto è favorevole si procede."}, {"label": "Avvio", "title": "Come si avvia: due strade possibili", "summary": "Il PPP può partire da un bando pubblico oppure da una proposta spontanea di un operatore privato.", "detail": "Nell'iniziativa pubblica è l'ente a pubblicare il bando con le proprie specifiche. Nell'iniziativa privata (finanza di progetto, art. 193) è un operatore a presentare una proposta completa, che l'ente valuta entro 90 giorni. Dal Correttivo 2024 il promotore non ha più un diritto di prelazione automatico: in entrambi i casi si arriva sempre a una gara aperta."}, {"label": "Gara", "title": "Gara e valutazione delle offerte", "summary": "I due percorsi si uniscono qui: una commissione valuta le offerte tecniche ed economiche.", "detail": "La commissione verifica la solidità del piano economico-finanziario, la congruità tecnica della proposta e l'assenza di anomalie. Per le operazioni oltre i 50 milioni di euro è necessario anche un parere preventivo del NARS."}, {"label": "Firma", "title": "Aggiudicazione e firma del contratto", "summary": "Dopo l'aggiudicazione, un periodo di sospensione tutela eventuali ricorsi prima della firma.", "detail": "Trascorsi 35 giorni di standstill senza ricorsi, si firma il contratto. È obbligatorio trasmettere i dati dell'operazione al portale della Ragioneria Generale dello Stato: senza questo passaggio il contratto non è efficace."}, {"label": "Costruzione", "title": "Costruzione o riqualificazione", "summary": "Il privato costruisce a proprio rischio: ritardi e sforamenti di costo restano a suo carico.", "detail": "Il canone non decorre finché l'opera non è collaudata e messa a disposizione secondo gli standard pattuiti. È in questa fase che si misura concretamente il trasferimento del rischio di costruzione al privato."}, {"label": "Gestione", "title": "Gestione — 15-30 anni di canone e KPI", "summary": "Per tutta la durata del contratto, il canone dipende dal rispetto di indicatori di prestazione.", "detail": "Temperatura, illuminazione, qualità dell'aria e disponibilità della struttura sono monitorati costantemente. Se gli standard non vengono rispettati, il canone si riduce automaticamente, senza bisogno di contestazioni formali."}, {"label": "Chiusura", "title": "Fine contratto — l'opera resta pubblica", "summary": "Alla scadenza, l'edificio continua la sua vita come scuola statale.", "detail": "La proprietà pubblica dell'opera non è mai stata in discussione: il PPP riguarda la costruzione e la gestione, non la proprietà né l'attività didattica, che restano interamente pubbliche dall'inizio alla fine."}];
+  var stepsEl=document.getElementById("wizSteps");
+  if(!stepsEl) return;
+  var titleEl=document.getElementById("wizTitle"), summaryEl=document.getElementById("wizSummary"), detailEl=document.getElementById("wizDetail"),
+      prevBtn=document.getElementById("wizPrev"),
+      nextBtn=document.getElementById("wizNext"), panel=document.getElementById("wizPanel");
+  var CHECK_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>';
+  var i=0, userMoved=false, wizStatus=document.getElementById("wizStatus");
+  stepsEl.innerHTML=WIZ.map(function(s,idx){return '<li class="wiz-step wiz-reveal-step" data-i="'+idx+'"><button type="button" class="wiz-step-btn"><span class="visually-hidden">Tappa </span><span class="wiz-dot" data-num="'+(idx+1)+'"></span><span class="wiz-label">'+s.label+'</span></button></li>';}).join("");
+  var stepEls=Array.prototype.slice.call(stepsEl.children);
+  var wizTextEl=document.querySelector(".wiz-text");
+  function render(){
+    stepEls.forEach(function(el,idx){
+      var done=idx<i, active=idx===i;
+      el.classList.toggle("done",done); el.classList.toggle("active",active);
+      var dot=el.querySelector(".wiz-dot");
+      dot.innerHTML = done ? CHECK_ICON : dot.dataset.num;
+      var sb=el.querySelector(".wiz-step-btn");
+      if(active) sb.setAttribute("aria-current","step"); else sb.removeAttribute("aria-current");
+    });
+    var s=WIZ[i];
+    titleEl.textContent=s.title; summaryEl.textContent=s.summary; detailEl.textContent=s.detail;
+    var m=document.getElementById("wizMascot"); if(m){ m.src="assets/"+(i+1)+".png"; m.alt="La mascotte spiega: "+s.title; }
+    /* un pulsante che diventa disabled mentre ha il focus lo fa perdere: lo passo all'altro */
+    var hadNext=(document.activeElement===nextBtn), hadPrev=(document.activeElement===prevBtn);
+    prevBtn.disabled=(i===0); nextBtn.disabled=(i===WIZ.length-1);
+    if(hadNext && nextBtn.disabled) prevBtn.focus();
+    if(hadPrev && prevBtn.disabled) nextBtn.focus();
+    /* annuncio vocale del cambio tappa, solo dopo un'azione dell'utente (non al caricamento) */
+    if(userMoved && wizStatus){
+      wizStatus.textContent="";
+      setTimeout(function(){ wizStatus.textContent="Tappa "+(i+1)+" di "+WIZ.length+": "+s.title+". "+s.summary; }, 60);
+    }
+    /* fade-in del testo ad ogni cambio tappa (23/09/2026 - Leo). Un "animation" CSS statico
+       parte solo alla creazione/reflow dell'elemento, non quando cambia solo il textContent:
+       qui si riavvia "a mano" togliendo la classe, forzando un reflow (void ...offsetWidth) e
+       rimettendola, cosi' riparte anche se il testo e' gia' comparso in precedenza. */
+    if(wizTextEl){
+      wizTextEl.classList.remove("wiz-fade-run");
+      void wizTextEl.offsetWidth;
+      wizTextEl.classList.add("wiz-fade-run");
+    }
+  }
+  prevBtn.addEventListener("click",function(){ if(i>0){i--;userMoved=true;render();} });
+  nextBtn.addEventListener("click",function(){ if(i<WIZ.length-1){i++;userMoved=true;render();} });
+  stepEls.forEach(function(el){ el.addEventListener("click",function(){ i=+el.dataset.i; userMoved=true; render(); }); });
+  render();
+})();
+</script>
+
+<script>
+(function(){
+  var percorsoEl=document.getElementById("spPercorso"), wrap=document.getElementById("spCards"),
+      pillsWrap=document.getElementById("spPills"), pathSvg=document.getElementById("spPathSvg"), pathGroup=document.getElementById("spPathGroup"),
+      sezionePercorso=document.getElementById("percorso");
+  if(!wrap||!pillsWrap) return;
+  /* 07/10/2026 - Leo (accessibilita', punto 9): con prefers-reduced-motion niente scroll animato */
+  var REDUCE_MOTION=!!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  /* al cambio profilo si torna sempre in cima alla sezione "Scegli il tuo percorso":
+     altrimenti se si e' scrollati giu (es. sulla card 3) e si cambia profilo, si continua
+     a vedere una card del profilo appena selezionato ma nella posizione di scroll sbagliata,
+     senza alcun riferimento visivo a cosa e' cambiato. si tiene conto dell'header sticky
+     (.ppp-navbar-sticky) per non nascondere il titolo della sezione sotto di esso */
+  /* IMPORTANTE: qui va usato lenis.scrollTo(), MAI window.scrollTo() nativo. Lenis (vedi script
+     in fondo alla pagina) tiene un proprio stato interno di scroll "animato" e ad ogni frame
+     richiama internamente window.scrollTo() per raggiungerlo: se nel frattempo un window.scrollTo
+     nativo con behavior:"smooth" viene chiamato da fuori, Lenis lo ignora e continua a inseguire
+     il SUO target (rimasto quello di prima, es. dov'era la pagina prima del click) - le due
+     animazioni "litigano" frame dopo frame e il risultato finale e' imprevedibile: e' questo
+     (non un bug del calcolo del punto di destinazione, gia' corretto) il motivo per cui il click
+     su un pulsante del button group non portava in cima alla sezione ma atterrava altrove, verso
+     la prima card del profilo (segnalato da Leo). */
+  function scrollToPercorsoTop(){
+    if(!sezionePercorso) return;
+    var navbar=document.querySelector(".ppp-navbar-sticky");
+    var navH=navbar ? navbar.getBoundingClientRect().height : 0;
+    if(window.lenis){
+      window.lenis.scrollTo(sezionePercorso, { offset: -navH });
+    } else {
+      var top=sezionePercorso.getBoundingClientRect().top + window.pageYOffset - navH;
+      window.scrollTo({ top: Math.max(top,0), behavior: REDUCE_MOTION ? "auto" : "smooth" });
+    }
+  }
+
+
+  /* nomi file avatar: "{numero-tappa}-{lettera-profilo}.png" (e = ente pubblico, p = operatore privato, c = cittadino) */
+  var PROFILE_LETTER={ pa:"e", privato:"p", cittadino:"c" };
+  var PROFILE_NAME={ pa:"Ente pubblico", privato:"Operatore privato", cittadino:"Cittadino" };
+  var statusEl=document.getElementById("spStatus");
+
+  var SP_DATA={
+    pa:[
+      { eyebrow:"Il problema di partenza", title:"Perché il tuo patrimonio scolastico ti costa troppo?",
+        text:"Gli edifici scolastici italiani hanno in media 40-50 anni. Le scuole sono «opere fredde»: nessun ricavo da utenza, tu paghi solo il canone di disponibilità.",
+        variant:"stats", stats:[["40.000","Edifici scolastici"],["> 60%","Ante 1980"],["0","Ricavi da utenza"]],
+        callout:"Il PPP non è sempre la risposta giusta: sotto i 3-5 M€ conviene quasi sempre l'appalto tradizionale.",
+        links:[{label:"Consulta l'Anagrafe dell'edilizia scolastica", url:"https://anagrafe.istruzione.it/"}],
+        imgSide:"left" },
+      { eyebrow:"La prima decisione", title:"PPP o appalto? Come scegliere",
+        text:"Lo strumento chiave è confrontare il costo dell'appalto tradizionale (il PSC) con il PPP, tramite una griglia di MCA, per misurare il VFM.",
+        variant:"list", list:["Analisi del patrimonio esistente","Confronto costi PSC vs PPP","Griglia MCA — 9 criteri ponderati"],
+        callout:"Puoi chiedere l'assistenza gratuita del DIPE per la valutazione preliminare.",
+        links:[{label:"Leggi l'Art. 175 del Codice dei contratti", url:"https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2023-03-31;36"}],
+        imgSide:"right" },
+      { eyebrow:"La biforcazione", title:"Le due porte d'ingresso",
+        text:"A questo punto scegli (o subisci) una delle due strade per avviare l'operazione.",
+        variant:"compare", compare:[
+          {h:"Iniziativa pubblica", items:["Redigi tu il PFTE con gli standard che vuoi","Pubblichi il bando su ANAC (TED se sopra soglia UE)","Più controllo iniziale, più costi di progettazione a tuo carico"]},
+          {h:"Iniziativa privata", items:["Un promotore presenta una proposta completa (PFTE + PEF + bozza contratto)","Hai 90 giorni per valutarla e dichiarare l'interesse pubblico","Con il Correttivo 2024 non ha più <b>prelazione automatica</b>"]}
+        ],
+        callout:"Da qui la procedura si unifica: gara aperta, valutazione delle offerte, aggiudicazione.",
+        links:[{label:"Leggi l'Art. 193 del Codice", url:"https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2023-03-31;36"},{label:"Consulta il D.Lgs. 209/2024 (Correttivo)", url:"https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2024-12-31;209"}],
+        imgSide:"left" },
+      { eyebrow:"Strutturare il progetto", title:"Definisci l'output, non il metodo",
+        text:"Non dici come costruire: dici cosa vuoi. Il privato garantisce gli standard tramite KPI su temperatura, luce e qualità dell'aria.",
+        variant:"stats", stats:[["20°C ± 2°C","Temperatura conforme"],["UNI EN 12464","Illuminazione conforme"],["CO2 monitorata","Qualità aria"]],
+        callout:"Il PEF va reso credibile con l'asseverazione di un soggetto indipendente.",
+        links:[{label:"Consulta i CAM Edilizia 2025", url:"https://www.mase.gov.it/pagina/cam-criteri-ambientali-minimi"}],
+        imgSide:"right" },
+      { eyebrow:"Il contratto e la sua vita", title:"20-30 anni di gestione: cosa monitorare",
+        text:"Verifichi i KPI, applichi le penali e mantieni la classificazione off-balance secondo le regole ESA2010 di Eurostat.",
+        variant:"list", list:["Monitoraggio KPI sistematico","Decurtazione canone automatica","Revisione PEF su trigger contrattuali"],
+        callout:"Dopo l'aggiudicazione si applica lo standstill di 35 giorni prima della firma.",
+        links:[{label:"Vai al Portale PPP della RGS", url:"https://ppp.rgs.mef.gov.it/ppp/#/home"}],
+        imgSide:"left" }
+    ],
+    privato:[
+      { eyebrow:"Il mercato", title:"Un'opportunità interessante, ma complessa",
+        text:"Il PPP scolastico vale il 7,5% del mercato totale. Le scuole sono «opere fredde»: solo il canone di disponibilità della PA, nessun ricavo da utenza.",
+        variant:"stats", stats:[["7,5%","Quota scuole/tot."],["20-30 anni","Durata tipica"],["50%+","Invest. min. privato"]],
+        callout:"Strategia vincente: aggregare più plessi in un'unica SPV. Caso Espoo (FI): 8 scuole, 170 M€, un solo contratto.",
+        links:[{label:"Esplora l'EPEC Data Portal", url:"https://data.eib.org/epec/"}],
+        imgSide:"left" },
+      { eyebrow:"La biforcazione", title:"Le due strade per entrare",
+        text:"Il modo in cui entri nell'operazione cambia da subito il tuo margine di manovra.",
+        variant:"compare", compare:[
+          {h:"Proposta spontanea (art. 193)", items:["Costruisci tu PFTE, PEF asseverato e bozza di contratto","L'ente valuta entro 90 giorni","Con il Correttivo 2024 non hai più prelazione: la qualità tecnica conta di più"]},
+          {h:"Rispondi a un bando", items:["L'ente ha già definito PFTE e capitolato","Prepari un'offerta tecnico-economica","Meno lavoro di proposta, meno margine per plasmare il progetto"]}
+        ],
+        callout:"Da qui in poi la procedura è la stessa per tutti: gara, valutazione, aggiudicazione, contratto.",
+        links:[{label:"Leggi l'Art. 193 aggiornato al 2024", url:"https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2024-12-31;209"}],
+        imgSide:"right" },
+      { eyebrow:"Costruire la proposta", title:"PFTE, PEF e matrice dei rischi",
+        text:"Il PEF deve reggersi senza extraredditività. Indicatori chiave: DSCR >1.20, LLCR >1.25, sostenuti dal TIR e dal VAN del progetto.",
+        variant:"list", list:["PFTE: definisci output, non input","PEF con <b>asseverazione indipendente</b>","Matrice dei rischi completa"],
+        callout:"Il WACC e il costo dell'equity (Ke) determinano la redditività attesa dagli investitori.",
+        links:[{label:"Scarica il template PEF della RGS", url:"https://ppp.rgs.mef.gov.it/ppp/#/materiale-a-supporto"}],
+        imgSide:"left" },
+      { eyebrow:"La struttura finanziaria", title:"Come si finanzia un PPP scolastico",
+        text:"Il project finance è secured sui flussi futuri del canone. BEI (con garanzia EFSI) e CDP aiutano la bancabilità del progetto.",
+        variant:"list", list:["<b>CAPEX</b> iniziale coperto da equity + debito","<b>OPEX</b> coperto dal canone annuo","Caso Espoo: BEI 60 M€ + NIB 75 M€ + OP 35 M€ = 170 M€"],
+        callout:"", links:[],
+        imgSide:"right" },
+      { eyebrow:"La gestione", title:"30 anni di canone: qui si gioca la partita vera",
+        text:"Il sistema di M&V (spesso protocollo IPMVP) sui KPI è il cuore del contratto: se la scuola non performa, il canone si riduce.",
+        variant:"list", list:["SPV separata dal bilancio capogruppo","KPI monitorati con <b>BMS</b>","Manutenzione a tuo carico per tutta la durata"],
+        callout:"Dopo l'aggiudicazione si applica lo standstill di 35 giorni prima della firma.",
+        links:[{label:"Consulta i CAM EPC 2024", url:"https://www.mase.gov.it/"}],
+        imgSide:"left" }
+    ],
+    cittadino:[
+      { eyebrow:"La situazione oggi", title:"Le scuole italiane: un patrimonio da rinnovare",
+        text:"Oltre il 60% degli edifici scolastici è stato costruito prima del 1980. Sicurezza, energia, adeguamento: le urgenze non mancano.",
+        variant:"stats", stats:[["40.000","Edifici scolastici"],["> 60%","Ante 1980"],["€2,5 M","Risparmio/anno a Cinisello"]],
+        callout:"Aule fredde o con aria viziata incidono direttamente sulla concentrazione degli studenti.",
+        links:[{label:"Consulta l'Anagrafe dell'edilizia scolastica", url:"https://anagrafe.istruzione.it/"}],
+        imgSide:"right" },
+      { eyebrow:"La biforcazione", title:"Come parte un progetto PPP nella tua città",
+        text:"Ci sono due modi in cui può nascere un PPP scolastico nel tuo Comune.",
+        variant:"compare", compare:[
+          {h:"Il Comune pubblica un bando", items:["Il Comune decide da solo cosa vuole e lo mette a gara","Le imprese si candidano e competono tra loro"]},
+          {h:"Un'impresa fa una proposta", items:["Un'impresa presenta un progetto già pronto al Comune","Il Comune ha 90 giorni per valutarlo","Oggi l'impresa non ha più corsie preferenziali (<b>prelazione eliminata</b> nel 2024)"]}
+        ],
+        callout:"In entrambi i casi, dopo questa fase, si arriva sempre a una gara pubblica aperta a più imprese.",
+        links:[{label:"Scopri cos'è il PPP sul sito del DIPE", url:"https://www.programmazioneeconomica.gov.it/it/il-partenariato-pubblico-privato/il-ppp-cose/"}],
+        imgSide:"left" },
+      { eyebrow:"Cos'è davvero il PPP", title:"Non è privatizzare la scuola. È rinnovarla",
+        text:"Un'impresa (spesso una SPV creata apposta) costruisce e mantiene l'edificio. Docenti e programmi restano pubblici al 100%.",
+        variant:"list", list:["Il Comune definisce gli standard","Il privato costruisce e gestisce","La scuola torna al Comune a fine contratto"],
+        callout:"Se l'impresa non mantiene i livelli promessi, il Comune decurta automaticamente il canone di disponibilità.",
+        links:[],
+        imgSide:"right" },
+      { eyebrow:"Cosa cambia per i tuoi figli", title:"Standard garantiti per anni, non per budget",
+        text:"I livelli di comfort sono misurati con KPI scritti nel contratto: non dipendono dal bilancio annuale del Comune.",
+        variant:"list", list:["Temperatura ≥20°C in inverno","Illuminazione certificata","Guasto riparato in ore, non settimane"],
+        callout:"In una scuola PPP il comfort è un diritto contrattuale: l'impresa perde soldi se non lo rispetta.",
+        links:[{label:"Approfondisci il Green Deal e le scuole", url:"https://commission.europa.eu/strategy-and-policy/priorities-2019-2024/european-green-deal_it"}],
+        imgSide:"left" },
+      { eyebrow:"I numeri reali", title:"Cosa ha già ottenuto il PPP",
+        text:"Non è teoria: scuole già rinnovate con risultati misurabili in Italia e in Europa.",
+        variant:"stats", stats:[["-44%","Bollette Cinisello (MI)"],["-1.000 t","CO₂/anno risparmiata"],["8 scuole","A Espoo (FI) in 3 anni"]],
+        callout:"Espoo ha costruito 8 scuole senza spendere 170 milioni subito. In Italia molti interventi simili sono cofinanziati anche dal PNRR.",
+        links:[{label:"Guarda i PPP realizzati (DIPE)", url:"https://www.programmazioneeconomica.gov.it/it/il-partenariato-pubblico-privato/ppp-esempi-realizzati/"}],
+        imgSide:"right" }
+    ]
+  };
+
+  var currentProfilo="pa", revealed=1;
+  var pillBtns=Array.prototype.slice.call(pillsWrap.querySelectorAll(".btn"));
+
+  function cardBodyExtra(c, idx){
+    if(c.variant==="stats"){
+      var key=currentProfilo+"-"+idx;
+      return '<div class="sp-stats" data-key="'+key+'">'+c.stats.map(function(s){
+        return '<div class="sp-stat"><b class="sp-stat-num" data-final="'+s[0]+'">0</b><span>'+s[1]+'</span></div>';
+      }).join("")+'</div>';
+    }
+    if(c.variant==="list"){
+      return '<ul class="sp-list-plain">'+c.list.map(function(li){return '<li>'+li+'</li>';}).join("")+'</ul>';
+    }
+    if(c.variant==="compare"){
+      return '<div class="sp-compare">'+c.compare.map(function(col, i){
+        var cls=i===0 ? "sp-compare-a" : "sp-compare-b";
+        return '<div class="sp-compare-col '+cls+'"><h4>'+col.h+'</h4><ul>'+col.items.map(function(it){return '<li>'+it+'</li>';}).join("")+'</ul></div>';
+      }).join("")+'</div>';
+    }
+    return "";
+  }
+
+  /* bottone secondary outline di Bootstrap Italia al posto del semplice link testuale alla fonte */
+  function linksHTML(c){
+    if(!c.links || !c.links.length) return "";
+    return '<div class="sp-links">'+c.links.map(function(l){
+      return '<a class="btn btn-outline-secondary btn-sm sp-link-btn" href="'+l.url+'" target="_blank" rel="noopener">'+
+          '<span>'+l.label+'</span><svg class="icon icon-sm ms-1" aria-hidden="true"><use href="#icon-it-external-link"></use></svg><span class="visually-hidden">(link esterno)</span></a>';
+    }).join("")+'</div>';
+  }
+
+  /* contatore animato per i numeri nei box statistica: da 0 al valore finale.
+     riconosce prefisso/suffisso attorno al numero (es. "> 60%", "-1.000 t", "€2,5 M") e usa il
+     formato italiano (punto delle migliaia, virgola decimale). se il "prefisso" contiene lettere
+     (es. "UNI EN 12464", "CO2 monitorata") non e' un vero conteggio ma una sigla/codice: niente
+     animazione, si mostra direttamente il valore finale. */
+  var animatedStatKeys={};
+  function animateStatEl(el){
+    var final=el.getAttribute("data-final");
+    var m=/^(\D*?)(-?\d[\d.,]*)(\D*)$/.exec(final);
+    if(!m || /[A-Za-z]/.test(m[1])){ el.textContent=final; return; }
+    var prefix=m[1], numStr=m[2], suffix=m[3];
+    var neg=numStr.charAt(0)==="-";
+    if(neg) numStr=numStr.slice(1);
+    var decimals=0, target;
+    if(numStr.indexOf(",")>-1){
+      var parts=numStr.split(",");
+      decimals=parts[1] ? parts[1].length : 0;
+      target=parseFloat(parts[0].replace(/\./g,"")+"."+(parts[1]||""));
+    } else {
+      target=parseFloat(numStr.replace(/\./g,""));
+    }
+    if(neg) target=-target;
+    if(!isFinite(target) || target===0){ el.textContent=final; return; }
+    var duration=1450, start=null;
+    function step(ts){
+      if(start===null) start=ts;
+      var p=Math.min((ts-start)/duration, 1);
+      var eased=1-Math.pow(1-p, 3);
+      var current=target*eased;
+      el.textContent=prefix+current.toLocaleString("it-IT",{minimumFractionDigits:decimals, maximumFractionDigits:decimals})+suffix;
+      if(p<1) requestAnimationFrame(step);
+      else el.textContent=final;
+    }
+    requestAnimationFrame(step);
+  }
+  function animateStats(container){
+    container.querySelectorAll(".sp-stats").forEach(function(box){
+      var key=box.getAttribute("data-key");
+      var nums=box.querySelectorAll(".sp-stat-num");
+      if(animatedStatKeys[key]){
+        nums.forEach(function(el){ el.textContent=el.getAttribute("data-final"); });
+        return;
+      }
+      animatedStatKeys[key]=true;
+      nums.forEach(animateStatEl);
+    });
+  }
+
+  /* v6 (22/09/2026, Leo: "i pulsanti torna su/torna giu' sono in row e colonne diverse da quelli
+     dell'immagine e della card... spostando questi due bottoni all'interno del div dov'e' l'immagine
+     i bottoni si avvicinano?"): niente piu' righe connettore separate (v5). I due pulsanti sono ora
+     generati QUI, come figli diretti di ".sp-media", sovrapposti al bordo superiore/inferiore
+     dell'immagine tramite ".sp-media-btn" (vedi CSS) - restano sempre sulla linea tratteggiata e la
+     loro distanza dipende solo dal margine tra le righe (".sp-row + .sp-row"). "back" (freccia su,
+     data-back-to) compare su ogni card tranne la prima; "next" (freccia giu', data-next-to) su ogni
+     card che ha un seguito, con id="spRevealBtn" SOLO sulla card di frontiera (idx+1===revealed,
+     serve a drawPath() per sapere dove finire la linea SVG) - stessa logica di prima, cambia solo
+     DOVE nel markup finiscono i due bottoni. */
+  function cardHTML(c, idx, total, opts){
+    opts=opts||{};
+    var revCls=c.imgSide==="right" ? " flex-lg-row-reverse" : "";
+    var mtCls=idx===0 ? " mt-4" : "";
+    var img="assets/"+(idx+1)+"-"+PROFILE_LETTER[currentProfilo]+".png";
+    var calloutHTML=c.callout ? '<div class="sp-callout"><span class="sp-callout-ico">i</span><span>'+c.callout+'</span></div>' : "";
+    var backBtn=opts.showBack ?
+        '<button class="sp-reveal-btn sp-reveal-btn-up sp-media-btn sp-media-btn-top d-none d-lg-flex" type="button" data-back-to="'+(idx-1)+'" aria-label="Torna alla tappa precedente"><svg class="icon icon-white"><use href="#icon-it-arrow-right"></use></svg></button>' : "";
+    var nextBtn="";
+    if(opts.showNext){
+      var idAttr=opts.isFrontier ? ' id="spRevealBtn"' : '';
+      var label=opts.isFrontier ? "Mostra il prossimo step" : "Vai alla tappa successiva";
+      nextBtn='<button class="sp-reveal-btn sp-media-btn sp-media-btn-bottom d-none d-lg-flex" type="button"'+idAttr+' data-next-to="'+(idx+1)+'" aria-label="'+label+'"><svg class="icon icon-white"><use href="#icon-it-arrow-right"></use></svg></button>';
+    }
+    /* 07/10/2026 - Leo (mobile, step 4): sotto i 992px i due pulsanti tondi (freccia su/giu') non
+       hanno senso: stanno sull'immagine, SOPRA la card, quindi "avanti" compare prima di aver letto
+       la scheda a cui appartiene. Su mobile li nascondo (d-none d-lg-flex qui sopra) e metto una
+       barra Indietro/Avanti in fondo alla card stessa (d-lg-none: da desktop non si vede, li' resta
+       il percorso tratteggiato coi pulsanti tondi). Stessi data-back-to / data-next-to, quindi i
+       listener sotto in renderPercorso() funzionano senza modifiche. Stesso pattern grafico di
+       #wizPrev/#wizNext nel riepilogo a tappe. */
+    var navBackM=opts.showBack ?
+        '<button class="btn btn-outline-primary" type="button" data-back-to="'+(idx-1)+'"><svg class="icon icon-primary icon-sm me-1" aria-hidden="true"><use href="#icon-it-arrow-left"></use></svg>Indietro</button>' : "";
+    var navNextM=opts.showNext ?
+        '<button class="btn btn-primary" type="button" data-next-to="'+(idx+1)+'">Avanti<svg class="icon icon-white icon-sm ms-1" aria-hidden="true"><use href="#icon-it-arrow-right"></use></svg></button>' : "";
+    var navM=(navBackM||navNextM) ? '<div class="sp-card-nav d-lg-none">'+navBackM+navNextM+'</div>' : "";
+    /* 07/10/2026 - Leo (mobile, step 5): su mobile l'ordine e' SEMPRE prima la scheda e poi
+       l'immagine (order-1 / order-2 di Bootstrap), cosi' la barra Indietro/Avanti in fondo alla card
+       e' seguita dall'avatar e poi dalla card dopo. Da 992px (order-lg-0) torna l'ordine del DOM
+       con l'immagine a sinistra/destra alternata (flex-lg-row-reverse), invariato. */
+    return '<div class="row sp-row'+revCls+mtCls+'">'+
+        '<div class="col-12 col-lg-5 sp-media order-2 order-lg-0">'+backBtn+'<img src="'+img+'" alt="">'+nextBtn+'</div>'+
+        '<div class="col-12 col-lg-7 sp-card order-1 order-lg-0">'+
+          '<div class="sp-eyebrow-row">'+
+            '<p class="sp-eyebrow">'+c.eyebrow+'</p>'+
+            '<span class="badge bg-primary rounded-pill">Aula '+(idx+1)+'/'+total+'</span>'+
+          '</div>'+
+          '<h3 class="sp-title" tabindex="-1">'+c.title+'</h3>'+
+          '<p class="sp-text">'+c.text+'</p>'+
+          cardBodyExtra(c, idx)+
+          calloutHTML+
+          linksHTML(c)+
+          navM+
+        '</div>'+
+      '</div>';
+  }
+
+  /* disegna UN solo path SVG continuo attraverso i centri reali di ogni avatar
+     rivelato e, se presente, del pulsante: mai spezzoni/segmenti separati */
+  /* segmento "a gradino" (giu' - orizzontale - giu') con angoli smussati tra due punti,
+     invece della diagonale dura: se i due punti sono gia' sulla stessa x, resta una riga dritta */
+  function elbowSegment(x1,y1,x2,y2,r){
+    if(Math.abs(x2-x1)<1){
+      return " L "+x2.toFixed(1)+" "+y2.toFixed(1);
+    }
+    var midY=y1+(y2-y1)/2;
+    var rad=Math.min(r, Math.abs(y2-y1)/2-2, Math.abs(x2-x1)/2-2);
+    if(rad<2) rad=0;
+    var dir=x2>x1 ? 1 : -1;
+    var s="";
+    s+=" L "+x1.toFixed(1)+" "+(midY-rad).toFixed(1);
+    s+=" Q "+x1.toFixed(1)+" "+midY.toFixed(1)+" "+(x1+dir*rad).toFixed(1)+" "+midY.toFixed(1);
+    s+=" L "+(x2-dir*rad).toFixed(1)+" "+midY.toFixed(1);
+    s+=" Q "+x2.toFixed(1)+" "+midY.toFixed(1)+" "+x2.toFixed(1)+" "+(midY+rad).toFixed(1);
+    s+=" L "+x2.toFixed(1)+" "+y2.toFixed(1);
+    return s;
+  }
+
+  /* Aggiorna posizione orizzontale, altezza E VISIBILITA' del piccolo tratteggio
+     .sp-pills-connector, per centrarlo sotto il pulsante profilo attivo e farlo arrivare
+     esattamente fino al primo avatar rivelato (nessun vuoto, nessuna sovrapposizione) - MA
+     SOLO quando quel collegamento ha ancora senso.
+     Perche' serve un caso a parte per lo scroll (a differenza del resto della sezione): il
+     bottone e' dentro la barra sticky (fermo sullo schermo una volta "attaccata"), mentre il
+     primo avatar scorre normalmente con la pagina. Finche' la card 1 e' vicina all'inizio della
+     section questa distanza e' positiva e ha senso disegnarla; ma se l'utente scorre oltre la
+     card 1 (per leggere la card 2, 3...), l'avatar della card 1 e' ormai scorso SOPRA la barra
+     sticky e la distanza diventerebbe negativa/senza senso - un valore calcolato una volta sola
+     (al cambio profilo/reveal, come prima) restava "vecchio" in quel caso e produceva un
+     tratteggino corto e scollegato, staccato nel vuoto (segnalato da Leo con screenshot: "la
+     linea rimane sticky top" invece di sparire quando non serve piu'). Fix: un listener leggero
+     su "scroll" (throttle rAF, come il pattern usato altrove in questo file) richiama SOLO
+     questa funzione - non l'intero ridisegno della linea SVG principale, che resta del tutto
+     scroll-indipendente come prima - per nascondere il tratteggino quando il vuoto non e' piu'
+     sensato e mostrarlo/aggiornarlo quando lo e'. E' un controllo economico (due
+     getBoundingClientRect, nessun ricalcolo dei punti del path), quindi non introduce il jitter
+     visto nei tentativi precedenti quando era l'INTERA linea a scriversi ad ogni frame. */
+  function updatePillsConnector(){
+    var connector=document.getElementById("spPillsConnector");
+    var connSvg=document.getElementById("spPillsConnectorSvg");
+    var connPath=document.getElementById("spPillsConnectorPath");
+    var activePill=pillsWrap ? pillsWrap.querySelector(".btn-primary") : null;
+    if(!connector || !connSvg || !connPath || !activePill) return;
+    var container=connector.parentElement;
+    var pr=activePill.getBoundingClientRect();
+    var cr=container.getBoundingClientRect();
+    var pillX=(pr.left+pr.width/2)-cr.left;
+    var firstImg=wrap ? wrap.querySelector(".sp-media img") : null;
+    if(!firstImg) return;
+    var ir=firstImg.getBoundingClientRect();
+    var gap=ir.top - pr.bottom;
+    if(gap<12){
+      /* la card 1 e' scorsa sopra (o troppo vicina a) la barra sticky: il collegamento non ha
+         piu' senso visivo, meglio non mostrarlo che mostrarlo corto/staccato nel vuoto */
+      connector.style.display="none";
+    } else {
+      connector.style.display="";
+      var h=Math.min(gap, 480);
+      /* la X del primo avatar quasi mai coincide con quella del pulsante attivo (le card si
+         alternano sinistra/destra): serve lo stesso gomito della linea principale per raggiungerla
+         davvero, non solo una riga dritta sotto il pulsante */
+      var avatarX=(ir.left+ir.width/2)-cr.left;
+      connSvg.setAttribute("width", cr.width);
+      connSvg.setAttribute("height", h);
+      connSvg.style.height=h+"px";
+      connPath.setAttribute("d", "M "+pillX.toFixed(1)+" 0"+elbowSegment(pillX, 0, avatarX, h, 28));
+    }
+  }
+
+  function drawPath(){
+    if(!pathSvg||!pathGroup) return;
+    updatePillsConnector();
+    var cRect=percorsoEl.getBoundingClientRect();
+    var pts=[];
+    /* La linea SVG non parte piu' dal pulsante del button group profili: quel punto viveva dentro
+       la barra sticky (.sp-pills-sticky), e ogni tentativo di tenerlo agganciato correttamente
+       durante lo scroll (redraw continuo, poi posizione di riposo via offsetTop) ha continuato
+       a creare artefatti visivi in produzione. La linea torna quindi a partire semplicemente dal
+       primo avatar rivelato e a finire sul bottone "mostra il prossimo step": tutti punti che
+       scorrono normalmente con la pagina (nessuna dipendenza da elementi sticky), quindi il
+       tratteggio scorre insieme al resto del contenuto senza bisogno di alcun ricalcolo legato
+       allo scroll. Il collegamento visivo tra pulsante e linea e' invece affidato a
+       .sp-pills-connector (vedi updatePillsConnector sopra e commento CSS), che non ha questo
+       problema perche' e' un figlio della barra sticky stessa, non un punto calcolato a parte. */
+    var imgs=wrap.querySelectorAll(".sp-media img");
+    imgs.forEach(function(img, idx){
+      var r=img.getBoundingClientRect();
+      /* il PRIMO avatar usa il TOP dell'immagine (non il centro) come punto: con card alte
+         (variant stats/compare) il centro dell'immagine puo' essere molto piu' in basso della
+         barra profili, lasciando un vuoto enorme tra .sp-pills-connector e l'inizio della linea
+         SVG - segnalato da Leo su screenshot ("la linea e' sempre tagliata nella prima section").
+         Gli avatar successivi restano centrati (gia' confermato ok dal cliente). */
+      var y = idx===0 ? r.top : (r.top+r.height/2);
+      pts.push([ (r.left+r.width/2)-cRect.left, y-cRect.top ]);
+    });
+    var btn=document.getElementById("spRevealBtn");
+    if(btn){
+      var rb=btn.getBoundingClientRect();
+      pts.push([ (rb.left+rb.width/2)-cRect.left, (rb.top+rb.height/2)-cRect.top ]);
+    }
+    var h=Math.max(wrap.scrollHeight, wrap.offsetHeight);
+    pathSvg.setAttribute("width", cRect.width);
+    pathSvg.setAttribute("height", h);
+    pathSvg.style.height=h+"px";
+    if(pts.length<2){ pathGroup.innerHTML=""; return; }
+    /* Un solo <path> continuo per tutta la linea sembrava la scelta piu' pulita, ma "stroke-dasharray"
+       si applica alla lunghezza dell'arco calcolata dall'inizio dell'INTERO path: la fase del
+       tratteggio nel punto di ogni gomito/tratto orizzontale dipende quindi da quanto e' lunga
+       tutta la linea PRIMA di quel punto (che cambia con l'altezza reale delle card, variabile per
+       contenuto/variante). Se per caso quella fase cade su un "vuoto" del pattern 12-9 proprio dove
+       si trova il tratto orizzontale, quel tratto (che e' comunque corto rispetto ai tratti
+       verticali) puo' risultare quasi o del tutto invisibile: sembrano due linee verticali
+       scollegate, con "manca la linea orizzontale che le unisce" - esattamente il problema
+       segnalato da Leo, anche se geometricamente il punto e il gomito erano gia' corretti. Fix:
+       un <path> SEPARATO per ogni singolo segmento (tra due punti consecutivi), cosi' ognuno
+       ricomincia il proprio tratteggio dalla fase 0 al proprio inizio - il primo tratto (12px) e'
+       sempre visibile esattamente li', quindi il gomito e il tratto orizzontale non possono piu'
+       sparire per caso. Visivamente resta una linea unica e continua (i segmenti condividono gli
+       estremi), cambia solo come viene calcolato il tratteggio internamente. */
+    var html="";
+    for(var i=1;i<pts.length;i++){
+      var d="M "+pts[i-1][0].toFixed(1)+" "+pts[i-1][1].toFixed(1)+
+          elbowSegment(pts[i-1][0], pts[i-1][1], pts[i][0], pts[i][1], 28);
+      html+='<path d="'+d+'"></path>';
+    }
+    pathGroup.innerHTML=html;
+  }
+
+  var drawPathRaf=null;
+  function scheduleDrawPath(){
+    if(drawPathRaf) cancelAnimationFrame(drawPathRaf);
+    drawPathRaf=requestAnimationFrame(drawPath);
+  }
+  window.addEventListener("resize", scheduleDrawPath);
+  /* NESSUN listener su "scroll" per la linea SVG principale: non dipende dalla posizione della
+     barra sticky sul viewport durante lo scroll (vedi commento in drawPath) - si ricalcola solo
+     quando cambia davvero il layout (resize, cambio profilo, rivelazione di una nuova card,
+     caricamento immagini: vedi scheduleDrawPath() piu' sotto).
+     .sp-pills-connector e' l'UNICA eccezione: ha bisogno di un listener leggero su scroll per
+     nascondersi quando il primo avatar scorre sopra la barra sticky (vedi il commento lungo in
+     updatePillsConnector per il perche' - in breve, e' un controllo economico che tocca solo
+     questo piccolo tratteggio, non l'intera linea, quindi non reintroduce il jitter dei
+     tentativi precedenti). */
+  var connectorScrollTicking=false;
+  window.addEventListener("scroll", function(){
+    if(connectorScrollTicking) return;
+    connectorScrollTicking=true;
+    requestAnimationFrame(function(){
+      updatePillsConnector();
+      connectorScrollTicking=false;
+    });
+  }, { passive:true });
+  /* Bug trovato (probabile causa reale di piu' segnalazioni di "linea disallineata" nei round
+     precedenti, non solo del connettore): ogni ".sp-row" entra con l'animazione pppFadeUp
+     (translateY(16px) -> none, 550ms). renderPercorso() chiama scheduleDrawPath() SUBITO dopo
+     aver creato le righe, quindi la prima misurazione (posizione dell'avatar/riga) avviene
+     mentre l'animazione e' ancora a meta' - cattura una posizione transitoria, non quella finale
+     di riposo. Se l'immagine e' gia' in cache (img.complete true, comunissimo dopo il primo
+     caricamento), l'evento "load" piu' sotto non scatta e nessun altro ricalcolo corregge
+     quella misura errata: risultato, connettore/linea restano leggermente disallineati "a
+     random", a seconda che l'immagine fosse o meno gia' in cache. Fix: un ricalcolo aggiuntivo
+     ad ogni fine dell'animazione pppFadeUp (evento "animationend", delegato su wrap), quando la
+     riga e' finalmente ferma nella sua posizione di riposo. */
+  wrap.addEventListener("animationend", function(ev){
+    if(ev.animationName==="pppFadeUp") scheduleDrawPath();
+  });
+
+  /* su mobile (<992px) l'immagine sta SOPRA la card: scrollare al centro della sola card
+     lasciava l'avatar fuori schermo, quindi qui si porta in vista l'intera riga (immagine + card)
+     con l'inizio sotto la barra profili sticky (vedi scroll-margin-top su .sp-row nel CSS).
+     Da desktop resta il comportamento di prima (card al centro). */
+  function scrollToStep(i){
+    var mobile=window.matchMedia("(max-width:991.98px)").matches;
+    var target=wrap.querySelectorAll(mobile ? ".sp-row" : ".sp-card")[i];
+    if(target) target.scrollIntoView({behavior: REDUCE_MOTION ? "auto" : "smooth", block: mobile ? "start" : "center"});
+  }
+
+  /* 07/10/2026 - Leo (accessibilita', punto 3): renderPercorso() rifa' tutto l'HTML, quindi dopo "Avanti"/"Indietro" il
+     pulsante premuto non esiste piu' e il focus finiva su <body> (da tastiera si ripartiva dall'inizio
+     pagina, e lo screen reader non sapeva che era comparsa una scheda). Ora il focus va sul titolo
+     (h3, tabindex="-1") della tappa di destinazione. preventScroll: lo scroll lo fa scrollToStep. */
+  function focusStep(i){
+    var t=wrap.querySelectorAll(".sp-title")[i];
+    if(t) t.focus({preventScroll:true});
+  }
+
+  function renderPercorso(){
+    var list=SP_DATA[currentProfilo];
+    var html="";
+    for(var idx=0; idx<revealed && idx<list.length; idx++){
+      var c=list[idx];
+      var hasMore=(idx<list.length-1);
+      html+=cardHTML(c, idx, list.length, {
+        showBack: idx>0,
+        showNext: hasMore,
+        isFrontier: hasMore && (idx+1===revealed)
+      });
+    }
+    wrap.innerHTML=html;
+    animateStats(wrap);
+    wrap.querySelectorAll("[data-back-to]").forEach(function(backBtn){
+      backBtn.addEventListener("click", function(){
+        var backIdx=+backBtn.getAttribute("data-back-to");
+        scrollToStep(backIdx);
+        focusStep(backIdx);
+      });
+    });
+    /* Listener unico su tutti i pulsanti "avanti" (non solo la frontiera): al click, se la card di
+       destinazione non e' ancora rivelata la rivela (revealed++) e ri-renderizza, altrimenti scrolla
+       semplicemente alla card gia' presente - vedi commento su cardHTML per il perche'. */
+    wrap.querySelectorAll("[data-next-to]").forEach(function(nextBtn){
+      nextBtn.addEventListener("click", function(){
+        var targetIdx=+nextBtn.getAttribute("data-next-to");
+        if(targetIdx>=revealed){
+          revealed=targetIdx+1;
+          renderPercorso();
+          requestAnimationFrame(function(){ scrollToStep(targetIdx); focusStep(targetIdx); });
+        } else {
+          scrollToStep(targetIdx);
+          focusStep(targetIdx);
+        }
+      });
+    });
+    scheduleDrawPath();
+    wrap.querySelectorAll(".sp-media img").forEach(function(img){
+      if(!img.complete) img.addEventListener("load", scheduleDrawPath, { once:true });
+    });
+  }
+
+  pillBtns.forEach(function(btn){
+    btn.addEventListener("click",function(){
+      pillBtns.forEach(function(b){
+        b.classList.remove("btn-primary"); b.classList.add("btn-outline-primary");
+        b.setAttribute("aria-pressed","false");
+      });
+      btn.classList.remove("btn-outline-primary"); btn.classList.add("btn-primary");
+      btn.setAttribute("aria-pressed","true");
+      currentProfilo=btn.dataset.profilo;
+      revealed=1;
+      renderPercorso();
+      scrollToPercorsoTop();
+      if(statusEl){
+        statusEl.textContent="";
+        setTimeout(function(){ statusEl.textContent="Percorso per "+PROFILE_NAME[currentProfilo]+": "+SP_DATA[currentProfilo].length+" tappe, mostrata la prima."; }, 60);
+      }
+    });
+  });
+
+  /* v2 (23/09/2026, Leo: "bisogna animare anche le schede del Scegli il tuo percorso, con il
+     fade in"): il fade-in delle card (".sp-row{ animation:pppFadeUp ... }") esiste gia' ed entra
+     in gioco ogni volta che renderPercorso() ricrea il markup (click "avanti"/"indietro", cambio
+     profilo) - quello funzionava gia'. Il caso che NON si vedeva era la primissima chiamata, fatta
+     subito al caricamento della pagina: la section e' sotto la piega, quindi l'animazione finiva
+     (550ms) ben prima che l'utente ci scorresse sopra e sembrava "senza fade". Fix: la primissima
+     renderPercorso() parte solo quando la section entra in viewport (IntersectionObserver, una
+     tantum), cosi' anche le card iniziali si vedono comparire in fade-in, invece che gia' pronte. */
+  if("IntersectionObserver" in window && percorsoEl){
+    var firstRevealDone=false;
+    var percorsoIO=new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting && !firstRevealDone){
+          firstRevealDone=true;
+          renderPercorso();
+          percorsoIO.disconnect();
+        }
+      });
+    }, {threshold:0.1});
+    percorsoIO.observe(percorsoEl);
+  } else {
+    renderPercorso();
+  }
+})();
+</script>
+
+<!-- FAQ: "Vedi altre domande" rivela le 5 voci extra (#faqExtra) e poi si rimuove - un solo
+     batch, non paginazione ripetuta (vedi commento su .faq-accordion nel CSS). -->
+<script>
+(function(){
+  var moreBtn=document.getElementById("faqMoreBtn");
+  var extra=document.getElementById("faqExtra");
+  var wrap=document.getElementById("faqMoreWrap");
+  if(moreBtn && extra && wrap){
+    moreBtn.addEventListener("click", function(){
+      extra.hidden=false;
+      wrap.remove();
+    });
+  }
+
+  /* Fade-in della section FAQ al primo scroll in viewport (23/09/2026 - Leo), stessa tecnica
+     usata per le card "Come funziona": IntersectionObserver una tantum su #faq, poi "is-visible"
+     sui due blocchi (.faq-reveal) con un piccolo sfalsamento tra testo+immagine e accordion. */
+  var faqSection=document.getElementById("faq");
+  var faqBlocks=document.querySelectorAll(".faq-reveal");
+  if(faqSection && faqBlocks.length){
+    var reduceMotion=window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if(reduceMotion || !("IntersectionObserver" in window)){
+      faqBlocks.forEach(function(el){ el.classList.add("is-visible"); });
+    } else {
+      var faqIO=new IntersectionObserver(function(entries){
+        entries.forEach(function(entry){
+          if(!entry.isIntersecting) return;
+          faqBlocks.forEach(function(el, idx){
+            setTimeout(function(){ el.classList.add("is-visible"); }, idx*150);
+          });
+          faqIO.disconnect();
+        });
+      }, {threshold:0.1});
+      faqIO.observe(faqSection);
+    }
+  }
+})();
+</script>
+
+<!-- Animazione hero (23/09/2026 - Leo: "fade in in hero, e i numeri sotto si devono muovere tipo
+     counter" - SOLO la hero, non altre section). Il fade-up del testo (eyebrow/h1/lead/stats/CTA)
+     esiste gia' via CSS puro (vedi ".ppp-hero-inner .col-12 > *" + @keyframes pppFadeUp) perche' la
+     hero e' sempre sopra la piega, quindi puo' partire da sola al caricamento. Qui resta solo cio'
+     che il CSS puro non puo' fare: il conteggio dei numeri (richiede JS, stessa logica di
+     animateStatEl() usata per le card del percorso, ma quella funzione vive dentro un'altra IIFE
+     quindi qui ne teniamo una copia minima, pensata per numeri interi semplici senza
+     prefisso/suffisso). -->
+<script>
+(function(){
+  /* Contatore numeri hero - parte una sola volta al caricamento (la hero e' sempre visibile
+     da subito), con un piccolo ritardo per farlo partire dopo che il blocco stats e' comparso
+     (fade-up nth-child(4), delay .44s + durata .7s ~= visibile intorno a 1.1s). */
+  var heroNums=document.querySelectorAll(".ppp-hero-stats .ppp-stat-num[data-final]");
+  var reduceMotion=window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function countUp(el){
+    var target=parseFloat(el.getAttribute("data-final"));
+    if(!isFinite(target)){ return; }
+    if(reduceMotion || target===0){ el.textContent=target; return; }
+    var duration=1300, start=null;
+    function step(ts){
+      if(start===null) start=ts;
+      var p=Math.min((ts-start)/duration, 1);
+      var eased=1-Math.pow(1-p, 3);
+      el.textContent=Math.round(target*eased);
+      if(p<1) requestAnimationFrame(step);
+      else el.textContent=target;
+    }
+    requestAnimationFrame(step);
+  }
+  if(heroNums.length){
+    setTimeout(function(){
+      heroNums.forEach(countUp);
+    }, reduceMotion ? 0 : 700);
+  }
+})();
+</script>
+
+<!-- Animazione all'ingresso in viewport per "Le tappe del percorso" (29/09/2026 - Leo), diversa
+     da quella di Perche'/Fonti e da quella delle FAQ: pallini dello stepper a cascata (pop
+     scale, uno ogni 90ms) seguiti dal pannello (testo+mascotte) in zoom-fade. One-shot via
+     IntersectionObserver su #riepilogo, come gli altri reveal della pagina. Gli <li> dello
+     stepper con classe "wiz-reveal-step" sono generati dallo script piu' in alto (render() dello
+     wizard, gia' eseguito quando questo script parte, essendo posizionato dopo nel documento) -
+     qui si interviene solo aggiungendo "is-visible" al momento giusto, nessuna duplicazione
+     della logica di render. -->
+<script>
+(function(){
+  var wizSection=document.getElementById("riepilogo");
+  if(!wizSection) return;
+  var reduceMotion=window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function revealNow(){
+    wizSection.querySelectorAll(".wiz-reveal-step").forEach(function(el){ el.classList.add("is-visible"); });
+    var panel=wizSection.querySelector(".wiz-reveal-panel");
+    if(panel) panel.classList.add("is-visible");
+  }
+  if(reduceMotion || !("IntersectionObserver" in window)){
+    revealNow();
+    return;
+  }
+  var wizIO=new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(!entry.isIntersecting) return;
+      var steps=wizSection.querySelectorAll(".wiz-reveal-step");
+      steps.forEach(function(el, idx){
+        setTimeout(function(){ el.classList.add("is-visible"); }, idx*90);
+      });
+      var panel=wizSection.querySelector(".wiz-reveal-panel");
+      if(panel){
+        setTimeout(function(){ panel.classList.add("is-visible"); }, steps.length*90 + 100);
+      }
+      wizIO.disconnect();
+    });
+  }, {threshold:0.15});
+  wizIO.observe(wizSection);
+})();
+</script>
+
+<!-- Fade-in all'ingresso in viewport per "Perche' usare questa piattaforma" e "Fonti normative"
+     (29/09/2026 - Leo), stessa tecnica del fade FAQ (IntersectionObserver una tantum + classe
+     "is-visible", vedi .section-reveal nel CSS) ma un observer indipendente per ciascuna section:
+     cosi' ognuna parte con il proprio fade-in nel momento in cui ENTRA nella viewport, senza
+     aspettare l'altra ne' condividere lo stesso trigger. -->
+<script>
+(function(){
+  var els=document.querySelectorAll(".section-reveal");
+  if(!els.length) return;
+  var reduceMotion=window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(reduceMotion || !("IntersectionObserver" in window)){
+    els.forEach(function(el){ el.classList.add("is-visible"); });
+    return;
+  }
+  els.forEach(function(el){
+    var io=new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(!entry.isIntersecting) return;
+        entry.target.classList.add("is-visible");
+        io.disconnect();
+      });
+    }, {threshold:0.1});
+    io.observe(el);
+  });
+})();
+</script>
+
+<!-- Pulsanti profilo (#spPills) tutti della stessa larghezza (29/09/2026 - Leo: "prendi la
+     dimensione di quello piu' lungo e falli tutti di quella lunghezza") + immagine "le tre
+     utenze" sopra la barra profili sincronizzata alla larghezza risultante (vedi commento CSS su
+     .sp-pills-illustration) - le due cose vivono nello stesso script perche' l'ordine conta:
+     equalizePills() deve girare PRIMA di leggere pills.offsetWidth, altrimenti l'immagine si
+     sincronizzerebbe sulla vecchia larghezza "shrink-to-fit" (disuguale) invece che su quella
+     nuova (3 pulsanti uguali, larghi quanto il piu' lungo). -->
+<script>
+(function(){
+  var illustration=document.getElementById("spPillsIllustration");
+  var pills=document.getElementById("spPills");
+  if(!pills) return;
+  var pillBtns=Array.prototype.slice.call(pills.querySelectorAll(".btn"));
+
+  function equalizePills(){
+    if(!pillBtns.length) return;
+    /* reset prima di misurare: altrimenti una width gia' applicata da un giro precedente
+       (es. dopo un resize) falserebbe la misura della larghezza "naturale" del testo */
+    pillBtns.forEach(function(b){ b.style.width=""; });
+    var max=0;
+    pillBtns.forEach(function(b){ max=Math.max(max, b.getBoundingClientRect().width); });
+    pillBtns.forEach(function(b){ b.style.width=max+"px"; });
+  }
+
+  function syncWidth(){
+    equalizePills();
+    if(!illustration) return;
+    var w=pills.offsetWidth;
+    if(w>0){ illustration.style.width=w+"px"; }
+  }
+  syncWidth();
+  if(illustration){
+    if(illustration.complete){ syncWidth(); } else { illustration.addEventListener("load", syncWidth); }
+  }
+  window.addEventListener("resize", syncWidth);
+  /* i pulsanti usano il font Titillium Web caricato da Google Fonts: se al primo giro il font
+     non e' ancora pronto, il browser misura con un font di fallback (larghezze diverse) - un
+     ricalcolo quando il font e' effettivamente disponibile evita pulsanti tarati sulla misura
+     "sbagliata" del fallback. */
+  if(document.fonts && document.fonts.ready){ document.fonts.ready.then(syncWidth); }
+})();
+</script>
+</body>
+</html>

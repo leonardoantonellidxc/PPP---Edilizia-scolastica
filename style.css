@@ -583,6 +583,29 @@ a, button, summary, [tabindex]{ scroll-margin-top:5rem; }
    l'incoerenza che dovevano correggere. Se in futuro un nuovo file aula avesse ancora un canvas
    diverso dagli altri, la causa e' quella (proporzioni del file sorgente), non assente uno scale
    qui. */
+/* v4 (13/10/2026 - Leo: "le immagini nel tab ente pubblico sono troppo piccole, nel cittadino
+   enormi, si possono fare tutte della stessa dimensione?"). Causa: l'immagine riempiva .sp-media,
+   che a sua volta e' alto quanto la CARD accanto (align-items:stretch della riga). Con immagini
+   quadrate e object-fit:contain la dimensione visibile = altezza della card, quindi cambiava con
+   la quantita' di testo: card corte (ente pubblico) = immagine piccola, card lunghe (cittadino) =
+   immagine enorme. Ora da desktop (>=992px) l'immagine ha una dimensione FISSA, indipendente dalla
+   card, centrata nel box: uguale per tutti i profili e tutte le card. Per tararla basta cambiare
+   --sp-img-size (il .08 dello scale resta il "un poco poco piu' grande" del v2).
+   Tablet e mobile (sotto 992px) non toccati: li' il box ha gia' un'altezza fissa. */
+@media (min-width:992px){
+  .sp-media{ --sp-img-size:380px; }
+  .sp-media img{
+    inset:auto; top:50%; left:50%;
+    width:min(100%, var(--sp-img-size)); height:auto; aspect-ratio:1 / 1;
+    margin:0; transform:translate(-50%,-50%) scale(calc(1.08 * var(--sp-img-fix, 1)));
+  }
+  /* TOPPA (13/10/2026 - Leo: "una toppa veloce che serve subito"): i PNG di ente pubblico (-e) e
+     operatore privato (-p) hanno piu' margine trasparente attorno alla scena rispetto a quelli del
+     cittadino (-c), quindi a parita' di box sembrano piu' piccoli. Qui li ingrandisco a occhio per
+     pareggiarli al cittadino. Da togliere quando i file verranno ritagliati come quelli -c.
+     Per tarare: cambiare 1.4 (piu' alto = piu' grande). */
+  .sp-media img[src*="-e.png"], .sp-media img[src*="-p.png"]{ --sp-img-fix:1.4; }
+}
 /* v6: distanza tra una card e la successiva ora affidata interamente a questo margine (prima la
    davano le righe connettore rimosse) - e' anche cio' che decide quanto restano vicini i due
    pulsanti (avanti sotto una card, indietro sopra la successiva), visto che ognuno sporge di meta'
